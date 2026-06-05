@@ -9,12 +9,30 @@ You are Step 1 of a recruiting copilot pipeline: extract_jd_signals.
 Parse the recruiter-provided JD and return only JSON with exactly these keys:
 - role_type: string
 - required_skills: array of strings
+- related_skill_aliases: object whose keys are canonical required skills and
+  whose values are arrays of JD-relevant aliases, tool variants, acronyms, or
+  equivalent phrases
+- adjacent_backgrounds: array of strings
 - seniority_indicators: array of strings
+- seniority_level: string, one of "intern", "early", "mid", "senior", or
+  "unspecified"
 - company_stage: string
 - missing_information: array of strings
 - specific_detail: string
 
 Rules:
+- related_skill_aliases and adjacent_backgrounds should be generated dynamically
+  from this JD's domain. Do not rely on a fixed industry taxonomy.
+- related_skill_aliases should help local deterministic scoring match equivalent
+  concepts. Examples only:
+  React -> ["React.js", "ReactJS"]
+  FP&A -> ["Financial Planning & Analysis"]
+  EMR -> ["Electronic Medical Record"]
+  CRM -> ["Customer Relationship Management"]
+- adjacent_backgrounds should list adjacent candidate backgrounds that are
+  plausibly relevant to this specific role, not prestige-only filters.
+- seniority_level should reflect the JD language. Use "intern" for internships,
+  campus roles, student roles, or explicit intern titles.
 - specific_detail must be one exact, non-empty phrase copied from the JD that
   would make outreach feel specific.
 - specific_detail should be a short natural phrase of roughly 2 to 8 words,
@@ -52,7 +70,13 @@ Extracted JD signals:
 """
 
 
-def boolean_query_prompt(strategy_json: str) -> str:
+def boolean_query_prompt(strategy_json: str, validation_feedback: str = "") -> str:
+    feedback_instruction = (
+        f"\nPrevious Boolean query validation feedback:\n{validation_feedback}\n"
+        "Regenerate the query and fix every warning above."
+        if validation_feedback
+        else ""
+    )
     return f"""
 You are Step 3 of a recruiting copilot pipeline: generate_boolean_query.
 
@@ -67,6 +91,8 @@ Guardrail:
 
 Search strategy:
 {strategy_json}
+
+{feedback_instruction}
 """
 
 
@@ -89,24 +115,29 @@ def outreach_self_correction_prompt(
     return f"""
 You are Step 4 of a recruiting copilot pipeline: generate_outreach_message.
 
-Write a personalized, startup-oriented recruiting message that is free of
-generic AI-sounding language. Return only JSON with exactly these keys:
-- outreach_message: string
+Write three personalized recruiting outreach variants that are free of generic
+AI-sounding language. Return only JSON with exactly these keys:
+- warm_direct: string
+- startup_casual: string
+- executive_brief: string
 - specific_detail: string
 
 Hard requirements:
-- outreach_message must be strictly under 300 characters.
+- Each variant must be strictly under 300 characters.
 - specific_detail must equal this exact phrase from the JD: {specific_detail}
-- outreach_message must literally include this exact phrase: {specific_detail}
+- Each variant must literally include this exact phrase: {specific_detail}
 - Do not paraphrase or omit the exact phrase.
 - Write directly to the selected candidate.
-- Start with the candidate's first name in this format: "Hi FirstName,"
+- Each variant must start with the candidate's first name in this format:
+  "Hi FirstName,"
 - Use only candidate facts provided below. Do not invent employer, skills, or
   personal background.
-- Mention one concrete candidate detail and one concrete role detail.
+- Each variant must mention one concrete candidate detail and one concrete role
+  detail.
 - Tone must sound like a real recruiter: warm, concise, specific, low-pressure.
-- Mention why the role may be relevant in one concrete sentence.
-- End with a simple CTA, such as:
+- Each variant must mention why the role may be relevant in one concrete
+  sentence.
+- Each variant must end with a simple CTA, such as:
   "Open to a quick chat?"
   "Worth a quick conversation?"
   "Would you be open to learning more?"
@@ -116,6 +147,11 @@ Hard requirements:
   "exciting opportunity"
   "fast-growing company"
   "perfect fit"
+
+Style guidance:
+- warm_direct: clear, friendly, and specific.
+- startup_casual: slightly lighter and conversational, but not gimmicky.
+- executive_brief: concise and senior, with no hype.
 
 Style examples:
 Good example:

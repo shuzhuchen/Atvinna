@@ -41,10 +41,41 @@ class CandidateProfile(BaseModel):
 class JDSignals(BaseModel):
     role_type: str
     required_skills: list[str] = Field(min_length=1)
+    related_skill_aliases: dict[str, list[str]] = Field(default_factory=dict)
+    adjacent_backgrounds: list[str] = Field(default_factory=list)
     seniority_indicators: list[str] = Field(default_factory=list)
+    seniority_level: str = "unspecified"
     company_stage: str
     missing_information: list[str] = Field(default_factory=list)
     specific_detail: str
+
+    @field_validator("company_stage", mode="before")
+    @classmethod
+    def coerce_missing_company_stage(cls, value: Any) -> str:
+        if value is None or value == "":
+            return "Not stated"
+        return value
+
+    @field_validator("related_skill_aliases", mode="before")
+    @classmethod
+    def coerce_related_skill_aliases(cls, value: Any) -> dict[str, list[str]]:
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            return {}
+
+        aliases: dict[str, list[str]] = {}
+        for key, raw_aliases in value.items():
+            canonical = str(key).strip()
+            if not canonical:
+                continue
+            if isinstance(raw_aliases, list):
+                aliases[canonical] = [str(alias) for alias in raw_aliases if str(alias).strip()]
+            elif isinstance(raw_aliases, str):
+                aliases[canonical] = [raw_aliases]
+            else:
+                aliases[canonical] = [str(raw_aliases)]
+        return aliases
 
 
 class CandidateSearchStrategy(BaseModel):
@@ -57,6 +88,8 @@ class CandidateSearchStrategy(BaseModel):
     @classmethod
     def coerce_string_list(cls, value: Any) -> list[str]:
         if isinstance(value, list):
+            if not value:
+                return ["Not specified"]
             return [item if isinstance(item, str) else json.dumps(item) for item in value]
         if isinstance(value, str):
             return [value]
@@ -71,6 +104,13 @@ class BooleanQuery(BaseModel):
 
 class OutreachMessage(BaseModel):
     outreach_message: str
+    specific_detail: str
+
+
+class OutreachVariants(BaseModel):
+    warm_direct: str
+    startup_casual: str
+    executive_brief: str
     specific_detail: str
 
 

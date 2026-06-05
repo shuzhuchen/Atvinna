@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 from pathlib import Path
 
 from pydantic import ValidationError
 
-from backend.agent.candidate_scoring import score_candidates_locally
+from backend.agent.candidate_scoring import append_match_interpretation, score_candidates_locally
 from backend.agent.candidate_store import load_candidates
 from backend.agent.llm_client import LLMClient
 from backend.agent.prompts import (
@@ -25,11 +26,16 @@ from backend.agent.schemas import (
     JDSignals,
     OutreachMessage,
     OutreachOutput,
+    OutreachVariants,
     PipelineApiResponse,
     PipelineOutput,
     TraceEntry,
 )
-from backend.agent.validators import outreach_quality_validator, validate_boolean_query
+from backend.agent.validators import (
+    detect_recruiting_bias,
+    outreach_quality_validator,
+    validate_boolean_query,
+)
 
 
 OUTPUT_PATH = Path(__file__).resolve().parents[2] / "output.json"
@@ -173,17 +179,120 @@ def _generate_boolean_query(
     strategy: CandidateSearchStrategy,
 ) -> BooleanQuery:
     action = "generate_boolean_query"
-    result = client.call_json(
+    validation_feedback = ""
+    last_result: BooleanQuery | None = None
+    last_validation: dict[str, object] | None = None
+
+    for attempt in range(1, 4):
+        result = client.call_json(
+            action,
+            boolean_query_prompt(strategy.model_dump_json(), validation_feedback),
+            BooleanQuery,
+        )
+        validation = validate_boolean_query(result.boolean_query)
+        note = _boolean_validation_note(validation)
+
+        if validation["is_valid"]:
+            _record(trace, 3, action, attempt, "pass", note)
+            return result
+
+        last_result = result
+        last_validation = validation
+        validation_feedback = note
+
+        if attempt < 3:
+            _record(trace, 3, action, attempt, "retry", note)
+            continue
+
+        _record(
+            trace,
+            3,
+            action,
+            attempt,
+            "pass",
+            f"Continuing after 2 retries with Boolean query warnings. {note}",
+        )
+        return result
+
+    if last_result is None:
+        raise PipelineFailure("Failed to generate a Boolean query.", trace)
+
+    _record(
+        trace,
+        3,
         action,
-        boolean_query_prompt(strategy.model_dump_json()),
-        BooleanQuery,
+        3,
+        "pass",
+        f"Continuing with Boolean query warnings. {_boolean_validation_note(last_validation or {})}",
     )
-    valid, warning = validate_boolean_query(result.boolean_query)
-    if not valid:
-        _record(trace, 3, action, 1, "fail", warning)
-        raise PipelineFailure(warning, trace)
-    _record(trace, 3, action, 1, "pass", "Generated one sourcing-style Boolean query.")
-    return result
+    return last_result
+
+
+def _boolean_validation_note(validation: dict[str, object]) -> str:
+    return "Boolean query validation: " + json.dumps(
+        validation,
+        ensure_ascii=False,
+        separators=(",", ": "),
+    )
+
+
+def _bias_detection_note(
+    job_description: str,
+    strategy: CandidateSearchStrategy,
+    boolean_query: BooleanQuery,
+    outreach_message: str,
+) -> str:
+    result = detect_recruiting_bias(
+        job_description=job_description,
+        boolean_query=boolean_query.boolean_query,
+        search_strategy=strategy,
+        outreach_message=outreach_message,
+    )
+    return "Bias detection: " + json.dumps(
+        result,
+        ensure_ascii=False,
+        separators=(",", ": "),
+    )
+
+
+def _json_note(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ": "))
+
+
+def _outreach_variants_dict(response: OutreachVariants) -> dict[str, str]:
+    return {
+        "warm_direct": response.warm_direct,
+        "startup_casual": response.startup_casual,
+        "executive_brief": response.executive_brief,
+    }
+
+
+def _select_best_outreach_variant(
+    passing_variants: list[tuple[str, str]],
+    selected_candidate: CandidateProfile,
+    selected_match: CandidateMatch,
+) -> tuple[str, str]:
+    first_name = _first_name(selected_candidate).lower()
+    evidence_terms = [
+        *selected_match.matched_skills,
+        *selected_match.matched_manager_preferences,
+        selected_match.current_company,
+    ]
+
+    def score_variant(item: tuple[str, str]) -> tuple[int, int]:
+        variant_name, message = item
+        normalized_message = message.lower()
+        evidence_hits = sum(1 for term in evidence_terms if term and term.lower() in normalized_message)
+        starts_with_name = int(normalized_message.startswith(f"hi {first_name},"))
+        length_bonus = 1 if 120 <= len(message) <= 240 else 0
+        style_bonus = {
+            "warm_direct": 3,
+            "executive_brief": 2,
+            "startup_casual": 1,
+        }.get(variant_name, 0)
+        return (evidence_hits * 4 + starts_with_name * 2 + length_bonus + style_bonus, -len(message))
+
+    return max(passing_variants, key=score_variant)
 
 
 def _generate_outreach_message_with_retry(
@@ -214,7 +323,7 @@ def _generate_outreach_message_with_retry(
                     selected_match.model_dump_json(),
                     failure_reason,
                 ),
-                OutreachMessage,
+                OutreachVariants,
             )
         except ValidationError as exc:
             failure_reason = f"Invalid outreach JSON/schema: {exc}"
@@ -227,21 +336,34 @@ def _generate_outreach_message_with_retry(
             _record(trace, 4, action, attempt, "retry", failure_reason)
             continue
 
-        message = response.outreach_message.strip()
-        valid, errors = outreach_quality_validator(
-            message,
-            response.specific_detail,
-            job_description,
-            jd_signals,
-            _first_name(selected_candidate),
-        )
+        variants = _outreach_variants_dict(response)
+        passing_variants: list[tuple[str, str]] = []
+        validation_errors: list[str] = []
+        for variant_name, variant_message in variants.items():
+            message = variant_message.strip()
+            valid, errors = outreach_quality_validator(
+                message,
+                response.specific_detail,
+                job_description,
+                jd_signals,
+                _first_name(selected_candidate),
+            )
+            if valid:
+                passing_variants.append((variant_name, message))
+            else:
+                validation_errors.append(f"{variant_name}: {'; '.join(errors)}")
+
         if response.specific_detail.strip() != specific_detail:
-            errors.append(
+            validation_errors.append(
                 f"specific_detail must equal the Step 1 phrase {specific_detail!r}."
             )
-            valid = False
 
-        if valid:
+        if passing_variants and response.specific_detail.strip() == specific_detail:
+            selected_variant, message = _select_best_outreach_variant(
+                passing_variants,
+                selected_candidate,
+                selected_match,
+            )
             _record(
                 trace,
                 4,
@@ -250,7 +372,10 @@ def _generate_outreach_message_with_retry(
                 "pass",
                 (
                     f"Outreach passed local validation for {selected_match.full_name} "
-                    f"(local match score {selected_match.match_score})."
+                    f"(local match score {selected_match.match_score}). "
+                    f"Selected outreach variant: {selected_variant}. "
+                    f"Outreach variants: {_json_note({'variants': variants, 'selected': selected_variant})} "
+                    f"{_bias_detection_note(job_description, strategy, boolean_query, message)}"
                 ),
             )
             return OutreachOutput(
@@ -260,7 +385,7 @@ def _generate_outreach_message_with_retry(
                 attempts=attempt,
             )
 
-        failure_reason = "; ".join(errors)
+        failure_reason = "; ".join(validation_errors)
         if attempt == 3:
             error_message = (
                 "Failed to generate a valid outreach message after 3 attempts. "
@@ -299,13 +424,17 @@ def _generate_candidate_summary(
         CandidateSummary,
     )
     _validate_candidate_summary(summary, selected_candidate, selected_match, trace)
+    summary.fit_reason = append_match_interpretation(summary.fit_reason, selected_match.match_score)
     _record(
         trace,
         5,
         action,
         1,
         "pass",
-        f"Generated summary for locally selected candidate {selected_match.full_name}.",
+        (
+            f"Generated summary for locally selected candidate {selected_match.full_name}. "
+            f"Applied match interpretation to candidate_summary.fit_reason."
+        ),
     )
     return summary
 

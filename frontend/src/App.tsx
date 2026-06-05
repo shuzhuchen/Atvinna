@@ -15,6 +15,7 @@ export default function App() {
   async function runPipeline() {
     setLoading(true);
     setError("");
+    setResult(null);
 
     try {
       const response = await fetch("/api/run-pipeline", {

@@ -104,14 +104,14 @@ step, so it does not violate the five-step requirement.
 
 Candidates live in `backend/data/candidates.json`.
 
-The database currently contains at least five candidates and includes:
+The database currently contains six software-engineering candidates:
 
-- Sophia Martinez
-- Maya Chen
-- Daniel Brooks
-- Priya Nair
-- Marcus Reed
-- Shuzhu Chen
+- Sophia Martinez: new grad frontend engineer
+- Maya Chen: early-career AI software engineer
+- Daniel Brooks: backend software engineer
+- Priya Nair: AI / machine learning engineer
+- Marcus Reed: senior software engineer
+- Shuzhu Chen: AI/ML full-stack engineer
 
 Each profile follows the shared `CandidateProfile` schema:
 
@@ -157,12 +157,42 @@ matched_manager_preferences
 
 Scoring behavior:
 
-- `jd_match_score` is based on JD signals and search strategy.
-- `hiring_manager_score` is based on optional manager notes.
+- Step 1 dynamically extracts `related_skill_aliases`, `adjacent_backgrounds`,
+  and `seniority_level` from the current JD.
+- The local scorer consumes those dynamic signals instead of relying on a fixed
+  industry taxonomy.
+- `jd_match_score` is based on coverage of JD signals and search strategy.
+- Required skills contribute 50%.
+- Target background and role fit contribute 25%.
+- Keywords and tools contribute 15%.
+- Seniority or context contributes 10%.
+- Score caps prevent weak or adjacent candidates from reaching 90+.
 - Hiring manager notes are treated as preferences, not hard requirements.
-- When notes are present, JD Match is calibrated to leave a visible 20-point
-  preference band.
+- Hiring manager preference can break ties but cannot push weak core JD matches
+  into top-match range.
 - Short terms are guarded so skills like `R` do not accidentally match `RAG`.
+
+## Match Interpretation Layer
+
+The existing scoring rubric remains unchanged. After the final score is
+calculated, `interpret_match_score(score)` adds a recruiter-facing
+interpretation:
+
+```text
+80-100 -> Recruiter Screen | Strong enough for recruiter outreach
+65-79  -> Potential Match | Review before outreach
+50-64  -> Consider | Possible fit with gaps
+35-49  -> Low Match | Unlikely fit
+<35    -> Not Recommended | Do not prioritize
+```
+
+The required `output.json` schema is not expanded. Instead, the interpretation
+is included in `fit_reason` for candidate matches and appended as recruiter
+guidance for the selected candidate summary. Candidate match explanations use
+positive, balanced, low-fit, or reject language based on the score band, so
+candidates below 50 are not described as matching the role. The CLI and
+frontend display the score as a percentage and show only the `match_level`
+label beside it to avoid duplicated recommendation copy.
 
 Example preference notes for testing:
 
@@ -190,6 +220,53 @@ No extra top-level keys are written to `output.json`.
 The API response may include extra dashboard-only fields, such as
 `candidate_matches`, but the downloaded assignment JSON strips those extras.
 
+## Step 3 Boolean Query Validator
+
+Step 3 validates the generated Boolean query before downstream steps use it.
+
+The structured validator returns:
+
+```text
+is_valid
+warnings
+suggestions
+```
+
+It checks balanced parentheses, at least one `AND` or `OR`, empty quotes,
+one-keyword broad queries, repeated operators, and obvious protected-class
+filters.
+
+Invalid Step 3 output is retried up to two times. If the query is still invalid,
+the pipeline continues with warnings recorded in `pipeline_trace` instead of
+changing `output.json`.
+
+## Bias Detection Guardrail
+
+`detect_recruiting_bias()` lives in `backend/agent/validators.py`.
+
+It scans:
+
+- Job Description
+- Search Strategy
+- Boolean Query
+- Outreach Message
+
+It detects risky terms and patterns including age-coded language, gender-coded
+language, nationality/language restrictions, school prestige filters, and overly
+narrow company targeting.
+
+The result shape is:
+
+```text
+has_warning
+warnings
+recommended_action
+```
+
+This guardrail does not change `output.json` top-level keys. It is added to the
+Step 4 `pipeline_trace` note after outreach is generated. The CLI prints
+guardrail warnings when `has_warning` is true.
+
 ## Step 4 Self-Correction
 
 Step 4 is implemented in `backend/agent/pipeline.py`.
@@ -198,7 +275,13 @@ The retry prompt is in `backend/agent/prompts.py`.
 
 The local validator is in `backend/agent/validators.py`.
 
-Step 4 validates:
+Step 4 generates three outreach variants:
+
+- `warm_direct`
+- `startup_casual`
+- `executive_brief`
+
+Step 4 validates each variant:
 
 - `len(outreach_message) < 300`
 - `specific_detail` is non-empty
@@ -208,6 +291,10 @@ Step 4 validates:
 - the message has a low-pressure CTA
 - when a selected candidate is available, the message opens with
   `Hi FirstName,`
+
+The best passing variant becomes the required
+`outreach_message.outreach_message`. All variants and the selected variant name
+are stored only in the Step 4 `pipeline_trace` note and CLI output.
 
 If validation fails:
 
@@ -288,12 +375,11 @@ call Mistral.
 It currently checks:
 
 - Candidate database has at least five unique candidates
-- `Shuzhu Chen` exists in the candidate database
 - Candidate matches are sorted by score
-- Finance JD ranks Sophia Martinez first
 - Short skills do not create false matches
 - Hiring manager notes create visible preference score
 - Boolean query rejects protected-class filters
+- Bias detection flags risky recruiting language
 - Outreach validator rejects missing details and generic phrases
 - Outreach validator requires `Hi FirstName,` when candidate context exists
 

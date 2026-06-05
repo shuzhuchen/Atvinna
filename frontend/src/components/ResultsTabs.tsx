@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, CheckCircle2, ClipboardList, Download, RotateCcw } from "lucide-react";
+import { AlertCircle, CheckCircle2, ClipboardList, Download, RotateCcw, ShieldCheck } from "lucide-react";
 import { isPipelineOutput, type PipelineOutput } from "../types";
 import { CopyButton } from "./CopyButton";
 
@@ -12,6 +12,146 @@ const tabs: Array<{ id: TabId; label: string }> = [
   { id: "summary", label: "Candidate Summary" },
   { id: "trace", label: "Pipeline Trace" },
 ];
+
+const loadingStages = ["JD", "Search Strategy", "Boolean Query", "Outreach", "Candidate Summary"];
+
+interface BooleanValidationResult {
+  is_valid: boolean;
+  warnings: string[];
+  suggestions: string[];
+}
+
+interface BiasDetectionResult {
+  has_warning: boolean;
+  warnings: string[];
+  recommended_action: string;
+}
+
+interface OutreachVariantsResult {
+  variants: Record<string, string>;
+  selected: string;
+}
+
+function interpretMatchScore(score: number): { matchLevel: string; recommendation: string } {
+  if (score >= 80) {
+    return {
+      matchLevel: "Recruiter Screen",
+      recommendation: "Strong enough for recruiter outreach",
+    };
+  }
+  if (score >= 65) {
+    return {
+      matchLevel: "Potential Match",
+      recommendation: "Review before outreach",
+    };
+  }
+  if (score >= 50) {
+    return {
+      matchLevel: "Consider",
+      recommendation: "Possible fit with gaps",
+    };
+  }
+  if (score >= 35) {
+    return {
+      matchLevel: "Low Match",
+      recommendation: "Unlikely fit",
+    };
+  }
+  return {
+    matchLevel: "Not Recommended",
+    recommendation: "Do not prioritize",
+  };
+}
+
+function conciseCandidateExplanation(fitReason: string, interpretation: { matchLevel: string; recommendation: string }) {
+  return fitReason
+    .replace(`${interpretation.matchLevel} - ${interpretation.recommendation}. `, "")
+    .replace(`${interpretation.matchLevel}. `, "")
+    .replace(`Recruiter guidance: ${interpretation.matchLevel} - ${interpretation.recommendation}.`, "")
+    .replace(`Recruiter guidance: ${interpretation.matchLevel}.`, "")
+    .replace(/Match interpretation:\s*[^.]+\.?/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseJsonFromNote(note: string, marker: string, endMarker?: string): unknown | null {
+  const markerIndex = note.indexOf(marker);
+  if (markerIndex === -1) {
+    return null;
+  }
+
+  const start = markerIndex + marker.length;
+  const end = endMarker ? note.indexOf(endMarker, start) : -1;
+  const jsonText = note.slice(start, end === -1 ? undefined : end).trim();
+
+  try {
+    return JSON.parse(jsonText);
+  } catch {
+    return null;
+  }
+}
+
+function getStepNote(result: PipelineOutput, step: number): string {
+  const entry = [...result.pipeline_trace].reverse().find((traceEntry) => traceEntry.step === step);
+  return entry?.note ?? "";
+}
+
+function getBooleanValidation(result: PipelineOutput): BooleanValidationResult | null {
+  const parsed = parseJsonFromNote(getStepNote(result, 3), "Boolean query validation: ");
+  if (!parsed || typeof parsed !== "object") {
+    return null;
+  }
+
+  const value = parsed as Partial<BooleanValidationResult>;
+  if (typeof value.is_valid !== "boolean" || !Array.isArray(value.warnings) || !Array.isArray(value.suggestions)) {
+    return null;
+  }
+
+  return {
+    is_valid: value.is_valid,
+    warnings: value.warnings,
+    suggestions: value.suggestions,
+  };
+}
+
+function getBiasDetection(result: PipelineOutput): BiasDetectionResult | null {
+  const parsed = parseJsonFromNote(getStepNote(result, 4), "Bias detection: ");
+  if (!parsed || typeof parsed !== "object") {
+    return null;
+  }
+
+  const value = parsed as Partial<BiasDetectionResult>;
+  if (
+    typeof value.has_warning !== "boolean" ||
+    !Array.isArray(value.warnings) ||
+    typeof value.recommended_action !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    has_warning: value.has_warning,
+    warnings: value.warnings,
+    recommended_action: value.recommended_action,
+  };
+}
+
+function getOutreachVariants(result: PipelineOutput): OutreachVariantsResult | null {
+  const parsed = parseJsonFromNote(getStepNote(result, 4), "Outreach variants: ", " Bias detection: ");
+  if (!parsed || typeof parsed !== "object") {
+    return null;
+  }
+
+  const value = parsed as Partial<OutreachVariantsResult>;
+  if (!value.variants || typeof value.variants !== "object" || typeof value.selected !== "string") {
+    return null;
+  }
+
+  return {
+    variants: value.variants,
+    selected: value.selected,
+  };
+}
 
 function TagList({ items = [] }: { items?: string[] }) {
   return (
@@ -56,6 +196,8 @@ function SearchStrategyTab({ result }: { result: PipelineOutput }) {
 }
 
 function BooleanQueryTab({ result }: { result: PipelineOutput }) {
+  const validation = getBooleanValidation(result);
+
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -65,16 +207,68 @@ function BooleanQueryTab({ result }: { result: PipelineOutput }) {
       <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-4 font-mono text-xs leading-6 text-slate-800">
         {result.boolean_query}
       </pre>
+      {validation && (
+        <div className="mt-5 rounded-md border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase text-slate-500">Boolean Query Validator</p>
+            <span
+              className={`text-xs font-semibold ${
+                validation.is_valid ? "text-emerald-700" : "text-amber-700"
+              }`}
+            >
+              {validation.is_valid ? "Valid" : "Warnings"}
+            </span>
+          </div>
+          {validation.warnings.length > 0 ? (
+            <div className="mt-3 text-sm leading-6 text-slate-700">
+              <p className="font-medium text-slate-800">Warnings</p>
+              <ul className="mt-1 list-inside list-disc text-slate-600">
+                {validation.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-slate-600">No syntax or breadth warnings detected.</p>
+          )}
+          {validation.suggestions.length > 0 && (
+            <div className="mt-3 text-sm leading-6 text-slate-700">
+              <p className="font-medium text-slate-800">Suggestions</p>
+              <ul className="mt-1 list-inside list-disc text-slate-600">
+                {validation.suggestions.map((suggestion) => (
+                  <li key={suggestion}>{suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 function OutreachTab({ result }: { result: PipelineOutput }) {
   const [draft, setDraft] = useState(result.outreach_message.outreach_message);
+  const outreachVariants = getOutreachVariants(result);
+  const [selectedVariant, setSelectedVariant] = useState(outreachVariants?.selected ?? "");
 
   useEffect(() => {
     setDraft(result.outreach_message.outreach_message);
-  }, [result.outreach_message.outreach_message]);
+    setSelectedVariant(outreachVariants?.selected ?? "");
+  }, [outreachVariants?.selected, result.outreach_message.outreach_message]);
+
+  function selectVariant(variantName: string, message: string) {
+    setSelectedVariant(variantName);
+    setDraft(message);
+  }
+
+  function resetToGeneratedMessage() {
+    setDraft(result.outreach_message.outreach_message);
+    setSelectedVariant(outreachVariants?.selected ?? "");
+  }
+
+  const specificDetail = result.outreach_message.specific_detail;
+  const detailIncluded = draft.toLowerCase().includes(specificDetail.toLowerCase());
 
   return (
     <div>
@@ -83,9 +277,9 @@ function OutreachTab({ result }: { result: PipelineOutput }) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setDraft(result.outreach_message.outreach_message)}
+            onClick={resetToGeneratedMessage}
             title="Reset to generated message"
-            disabled={draft === result.outreach_message.outreach_message}
+            disabled={draft === result.outreach_message.outreach_message && selectedVariant === (outreachVariants?.selected ?? "")}
             className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -94,9 +288,59 @@ function OutreachTab({ result }: { result: PipelineOutput }) {
           <CopyButton value={draft} label="Copy message" />
         </div>
       </div>
+      {outreachVariants && (
+        <div className="mb-5 rounded-md border border-slate-200 bg-white p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase text-slate-500">A/B/C outreach variants</p>
+            <span className="text-xs font-semibold text-slate-700">
+              Selected: {selectedVariant ? selectedVariant.replace("_", " ") : "Custom draft"}
+            </span>
+          </div>
+          <div className="grid gap-3">
+            {(["warm_direct", "startup_casual", "executive_brief"] as const).map((variantName) => {
+              const message = outreachVariants.variants[variantName];
+              if (!message) {
+                return null;
+              }
+              const selected = variantName === selectedVariant;
+
+              return (
+                <button
+                  key={variantName}
+                  type="button"
+                  onClick={() => selectVariant(variantName, message)}
+                  aria-pressed={selected}
+                  className={`rounded-md border p-3 ${
+                    selected ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-white"
+                  } text-left transition-colors hover:border-slate-400 hover:bg-slate-50`}
+                >
+                  <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold uppercase text-slate-500">
+                      <input
+                        type="radio"
+                        name="outreach-variant"
+                        checked={selected}
+                        onChange={() => selectVariant(variantName, message)}
+                        className="h-3.5 w-3.5 accent-slate-900"
+                      />
+                      {variantName.replace("_", " ")}
+                    </label>
+                    {selected && <span className="text-xs font-semibold text-slate-900">Selected</span>}
+                  </div>
+                  <p className="text-sm leading-6 text-slate-700">{message}</p>
+                  <p className="mt-1 text-right text-xs text-slate-400">{message.length} characters</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <textarea
         value={draft}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          setSelectedVariant("");
+        }}
         className="min-h-40 w-full resize-y rounded-md border border-slate-300 bg-white p-4 text-sm leading-7 text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
       />
       <p className={`mt-2 text-right text-xs ${draft.length < 300 ? "text-slate-400" : "text-red-600"}`}>
@@ -105,11 +349,14 @@ function OutreachTab({ result }: { result: PipelineOutput }) {
       <div className="mt-5 grid gap-4 border-t border-slate-200 pt-5 sm:grid-cols-3">
         <div>
           <p className="text-xs font-semibold uppercase text-slate-500">Specific detail</p>
-          <p className="mt-1 text-sm text-slate-700">{result.outreach_message.specific_detail}</p>
+          <p className="mt-1 text-sm text-slate-700">{specificDetail}</p>
+          <p className={`mt-1 text-xs ${detailIncluded ? "text-emerald-700" : "text-amber-700"}`}>
+            {detailIncluded ? "Included in current message" : "Missing from current message"}
+          </p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase text-slate-500">Character count</p>
-          <p className="mt-1 text-sm text-slate-700">{result.outreach_message.character_count}</p>
+          <p className="mt-1 text-sm text-slate-700">{draft.length}</p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase text-slate-500">Attempts</p>
@@ -121,6 +368,8 @@ function OutreachTab({ result }: { result: PipelineOutput }) {
 }
 
 function CandidateSummaryTab({ result }: { result: PipelineOutput }) {
+  const showHiringManagerAdjustment = result.candidate_matches.some((match) => match.hiring_manager_score !== 0);
+
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase text-slate-500">Selected candidate summary</p>
@@ -157,34 +406,46 @@ function CandidateSummaryTab({ result }: { result: PipelineOutput }) {
 
       <div className="mt-8">
         <p className="mb-3 text-xs font-semibold uppercase text-slate-500">Candidate matches</p>
-        <div className="divide-y divide-slate-200 border-y border-slate-200">
-          {result.candidate_matches.map((match, index) => (
-            <div key={match.full_name} className="grid gap-3 py-4 sm:grid-cols-[32px_1fr_auto]">
-              <span className="text-sm font-semibold text-slate-400">#{index + 1}</span>
-              <div>
-                <p className="text-sm font-semibold text-slate-800">{match.full_name}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{match.current_company}</p>
-                <div className="mt-2">
-                  <TagList items={match.matched_skills} />
-                </div>
-                {match.matched_manager_preferences.length > 0 && (
-                  <div className="mt-3">
-                    <p className="mb-1 text-xs font-semibold uppercase text-slate-400">Manager preferences</p>
-                    <TagList items={match.matched_manager_preferences} />
+        <div className="grid gap-3">
+          {result.candidate_matches.map((match, index) => {
+            const interpretation = interpretMatchScore(match.match_score);
+            const explanation = conciseCandidateExplanation(match.fit_reason, interpretation);
+
+            return (
+              <div key={match.full_name} className="rounded-md border border-slate-200 bg-white p-4">
+                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <p className="text-sm font-semibold text-slate-900">#{index + 1} {match.full_name}</p>
+                      <p className="text-xs text-slate-500">{match.current_company}</p>
+                    </div>
+                    {match.matched_skills.length > 0 && (
+                      <div className="mt-3">
+                        <TagList items={match.matched_skills.slice(0, 5)} />
+                      </div>
+                    )}
+                    {showHiringManagerAdjustment && match.matched_manager_preferences.length > 0 && (
+                      <div className="mt-3">
+                        <TagList items={match.matched_manager_preferences.slice(0, 3)} />
+                      </div>
+                    )}
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{explanation}</p>
                   </div>
-                )}
-                <p className="mt-2 text-xs leading-5 text-slate-500">{match.fit_reason}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-semibold text-slate-900">{match.match_score}</p>
-                <p className="text-xs text-slate-400">overall match</p>
-                <div className="mt-3 space-y-1 text-xs text-slate-500">
-                  <p>JD Match: {match.jd_match_score}</p>
-                  <p>Hiring Manager: +{match.hiring_manager_score}</p>
+                  <div className="sm:min-w-44 sm:text-right">
+                    <p className="text-2xl font-semibold leading-none text-slate-950">{match.match_score}%</p>
+                    <p className="mt-1 text-xs text-slate-400">overall match</p>
+                    <p className="mt-3 text-sm font-semibold text-slate-900">{interpretation.matchLevel}</p>
+                    {showHiringManagerAdjustment && (
+                      <p className="mt-3 text-xs text-slate-500">Hiring Manager +{match.hiring_manager_score}</p>
+                    )}
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-full rounded-full bg-slate-900" style={{ width: `${match.match_score}%` }} />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -192,26 +453,74 @@ function CandidateSummaryTab({ result }: { result: PipelineOutput }) {
 }
 
 function PipelineTraceTab({ result }: { result: PipelineOutput }) {
+  const biasDetection = getBiasDetection(result);
+  const booleanValidation = getBooleanValidation(result);
+
   return (
-    <div className="divide-y divide-slate-200 border-y border-slate-200">
-      {result.pipeline_trace.map((entry, index) => (
-        <div key={`${entry.step}-${entry.attempt}-${index}`} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto]">
-          <div>
-            <p className="font-mono text-xs font-semibold text-slate-800">
-              Step {entry.step}: {entry.action}
+    <div>
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+        {booleanValidation && (
+          <div className="rounded-md border border-slate-200 bg-white p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-slate-500" />
+              <p className="text-xs font-semibold uppercase text-slate-500">Boolean Query Validator</p>
+            </div>
+            <p
+              className={`text-sm font-semibold ${
+                booleanValidation.is_valid ? "text-emerald-700" : "text-amber-700"
+              }`}
+            >
+              {booleanValidation.is_valid ? "Passed" : `${booleanValidation.warnings.length} warning(s)`}
             </p>
-            <p className="mt-1 text-xs text-slate-400">Attempt {entry.attempt}</p>
-            {entry.note && <p className="mt-1 text-xs leading-5 text-slate-500">{entry.note}</p>}
+            {booleanValidation.warnings.length > 0 && (
+              <ul className="mt-2 list-inside list-disc text-xs leading-5 text-slate-600">
+                {booleanValidation.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            )}
           </div>
-          <span
-            className={`w-fit text-xs font-semibold ${
-              entry.result === "pass" ? "text-emerald-700" : "text-amber-700"
-            }`}
-          >
-            {entry.result}
-          </span>
-        </div>
-      ))}
+        )}
+        {biasDetection && (
+          <div className="rounded-md border border-slate-200 bg-white p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-slate-500" />
+              <p className="text-xs font-semibold uppercase text-slate-500">Bias Detection Guardrail</p>
+            </div>
+            <p className={`text-sm font-semibold ${biasDetection.has_warning ? "text-amber-700" : "text-emerald-700"}`}>
+              {biasDetection.has_warning ? `${biasDetection.warnings.length} warning(s)` : "No warning detected"}
+            </p>
+            {biasDetection.warnings.length > 0 && (
+              <ul className="mt-2 list-inside list-disc text-xs leading-5 text-slate-600">
+                {biasDetection.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-2 text-xs leading-5 text-slate-500">{biasDetection.recommended_action}</p>
+          </div>
+        )}
+      </div>
+      <div className="divide-y divide-slate-200 border-y border-slate-200">
+        {result.pipeline_trace.map((entry, index) => (
+          <div key={`${entry.step}-${entry.attempt}-${index}`} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto]">
+            <div>
+              <p className="font-mono text-xs font-semibold text-slate-800">
+                Step {entry.step}: {entry.action}
+              </p>
+              <p className="mt-1 text-xs text-slate-400">Attempt {entry.attempt}</p>
+              {entry.note && <p className="mt-1 text-xs leading-5 text-slate-500">{entry.note}</p>}
+            </div>
+            <span
+              className={`w-fit text-xs font-semibold ${
+                entry.result === "pass" ? "text-emerald-700" : "text-amber-700"
+              }`}
+            >
+              {entry.result}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -311,12 +620,47 @@ export function EmptyResults() {
 }
 
 export function LoadingResults() {
+  const [stageIndex, setStageIndex] = useState(0);
+
+  useEffect(() => {
+    setStageIndex(0);
+    const intervalId = window.setInterval(() => {
+      setStageIndex((current) => Math.min(current + 1, loadingStages.length - 1));
+    }, 1400);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const progressPercent = Math.min(96, ((stageIndex + 1) / loadingStages.length) * 100);
+
   return (
     <section className="flex min-h-96 items-center justify-center bg-white p-6">
-      <div className="max-w-sm text-center">
-        <div className="mx-auto h-2 w-24 rounded-full bg-slate-300" />
+      <div className="w-full max-w-md text-center">
+        <div className="mx-auto h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-slate-900 transition-all duration-700 ease-out"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
         <p className="mt-4 text-sm font-medium text-slate-700">Running five pipeline steps...</p>
-        <p className="mt-1 text-sm text-slate-500">Results will appear here when the workflow completes.</p>
+        <p className="mt-1 text-sm text-slate-500">{loadingStages[stageIndex]}</p>
+        <div className="mt-5 grid gap-2 text-left">
+          {loadingStages.map((stage, index) => {
+            const complete = index <= stageIndex;
+            return (
+              <div key={stage} className="flex items-center gap-2 text-xs">
+                <span
+                  className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                    complete ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-300 text-slate-400"
+                  }`}
+                >
+                  {complete ? <CheckCircle2 className="h-3 w-3" /> : null}
+                </span>
+                <span className={complete ? "font-medium text-slate-800" : "text-slate-400"}>{stage}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

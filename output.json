@@ -1,63 +1,58 @@
 {
   "candidate_search_strategy": {
     "target_backgrounds": [
-      "Software Engineering",
-      "Computer Science",
-      "Backend Development",
-      "Distributed Systems",
-      "AI/ML Engineering",
-      "Systems Programming",
-      "Performance Optimization"
+      "data engineering",
+      "software engineering",
+      "computer science",
+      "data science",
+      "business analytics",
+      "data architecture"
     ],
     "target_companies": [
-      "growth-stage tech companies",
-      "AI-native startups",
-      "scalable backend infrastructure teams",
-      "LLM application companies",
-      "agent framework developers",
-      "data-driven optimization platforms"
+      "large scale tech company"
     ],
     "keywords": [
-      "Go",
+      "data engineering",
+      "SQL",
       "Python",
-      "Java",
-      "C++",
-      "backend engineering",
-      "distributed systems",
-      "system design",
-      "scalability",
-      "reliability",
-      "performance optimization",
-      "AIGC",
+      "data warehousing",
+      "data solutions",
+      "business problem solving",
+      "data system design",
       "LLM applications",
-      "agent frameworks",
-      "AI coding tools",
-      "workflow automation",
-      "data-driven optimization",
-      "experimentation platforms",
-      "user-facing products"
+      "real-time data processing",
+      "streaming data processing",
+      "real-time analytics",
+      "data warehouse design",
+      "data warehouse architecture",
+      "large language model applications",
+      "LLM integration",
+      "batch data warehouses",
+      "traditional data warehouses",
+      "data platform engineering",
+      "data infrastructure engineering"
     ],
-    "seniority": "Senior (3+ years of experience)"
+    "seniority": "entry-level to early-career (0-3 years)"
   },
-  "boolean_query": "( ( \"Software Engineering\" OR \"Computer Science\" OR \"Backend Development\" OR \"Distributed Systems\" OR \"AI/ML Engineering\" OR \"Systems Programming\" OR \"Performance Optimization\" ) AND ( \"Go\" OR \"Python\" OR \"Java\" OR \"C++\" OR \"backend engineering\" OR \"distributed systems\" OR \"system design\" OR \"scalability\" OR \"reliability\" OR \"performance optimization\" OR \"AIGC\" OR \"LLM applications\" OR \"agent frameworks\" OR \"AI coding tools\" OR \"workflow automation\" OR \"data-driven optimization\" OR \"experimentation platforms\" OR \"user-facing products\" ) AND ( \"Senior\" OR \"3+ years\" OR \"Senior Engineer\" OR \"Staff Engineer\" OR \"Principal Engineer\" ) ) AND ( ( \"growth-stage tech\" OR \"AI-native startup\" OR \"scalable backend infrastructure\" OR \"LLM application\" OR \"agent framework\" OR \"data-driven optimization platform\" ) )",
+  "boolean_query": "(data engineering OR software engineering OR computer science OR data science OR business analytics OR data architecture) AND (SQL OR Python OR \"data warehousing\" OR \"data solutions\" OR \"business problem solving\" OR \"data system design\" OR \"LLM applications\" OR \"real-time data processing\" OR \"streaming data processing\" OR \"real-time analytics\" OR \"data warehouse design\" OR \"data warehouse architecture\" OR \"LLM integration\" OR \"batch data warehouses\" OR \"traditional data warehouses\" OR \"data platform engineering\" OR \"data infrastructure engineering\") AND (\"entry-level\" OR \"early-career\" OR \"0-3 years\" OR \"new grad\" OR \"recent grad\" OR \"junior\") AND (\"large scale tech company\" OR \"FAANG\" OR \"tech giant\" OR \"unicorn startup\" OR \"high-growth tech\" OR \"scalable tech company\")",
   "outreach_message": {
-    "outreach_message": "Hi Maya, your Python automation and LLM integrations caught my eye. We’re building the next generation of growth systems at TikTok’s backend team. Open to a quick chat?",
-    "specific_detail": "next generation of growth",
-    "character_count": 168,
+    "outreach_message": "Hi Shuzhu, your Python, SQL, and real-time systems experience aligns with our need to build high quality real-time data warehouses. Would you be open to learning more?",
+    "specific_detail": "build high quality real-time data warehouses",
+    "character_count": 167,
     "attempts": 1
   },
   "candidate_summary": {
-    "name": "Maya Chen",
-    "current_company": "Northstar Data Labs",
+    "name": "Shuzhu Chen",
+    "current_company": "Kismet XYZ Inc.",
     "key_skills": [
       "Python",
-      "LLM APIs",
-      "AI Workflow Automation",
-      "REST APIs",
-      "CLI Tools"
+      "SQL",
+      "data engineering",
+      "real-time data processing",
+      "LLM applications"
     ],
-    "fit_reason": "Maya demonstrates strong alignment with the JD’s core backend engineering requirements through 1+ years of hands-on experience building Python services, integrating LLM APIs into workflows, and designing scalable data exchange schemas. Her expertise in AI-driven automation directly supports the AIGC and workflow optimization priorities for TikTok’s growth systems. Additionally, her recent role at Northstar Data Labs aligns with the growth-stage, data-driven backend engineering context described in the JD.",
-    "concerns": "Should confirm proficiency in Go and Java, as these are explicitly listed in the JD’s minimum qualifications. Experience with distributed systems, scalability, and reliability should also be verified, as these are critical for the role but not explicitly demonstrated in the provided profile."
+    "fit_reason": "Strong alignment with core JD requirements: extensive Python and SQL experience demonstrated through real-time data pipeline development (Kafka, AWS Lambda) and AI/ML applications (LangChain, RAG). Recent role as AI/ML Full-Stack Engineer at Kismet XYZ Inc. shows hands-on experience with high-volume data processing and event-driven architectures, directly relevant to building real-time data warehouses. LLM applications expertise (Agentic AI, RAG) aligns with the JD's emphasis on LLM integration for data solutions. Recruiter guidance: Potential Match.",
+    "concerns": "Data warehousing experience should be confirmed in recruiter screen - while current role involves real-time data processing, explicit mention of data warehouse design/architecture is not evident. Business problem-solving impact (translating needs into technical solutions) should be verified, as current responsibilities focus more on technical implementation than cross-functional collaboration. Availability for 12-week internship (May-June 2026) should be confirmed."
   },
   "pipeline_trace": [
     {
@@ -72,28 +67,28 @@
       "action": "generate_search_strategy",
       "attempt": 1,
       "result": "pass",
-      "note": "Seniority decision: Senior (3+ years of experience)"
+      "note": "Seniority decision: entry-level to early-career (0-3 years)"
     },
     {
       "step": 3,
       "action": "generate_boolean_query",
       "attempt": 1,
       "result": "pass",
-      "note": "Generated one sourcing-style Boolean query."
+      "note": "Boolean query validation: {\"is_valid\": true,\"warnings\": [],\"suggestions\": []}"
     },
     {
       "step": 4,
       "action": "generate_outreach_message",
       "attempt": 1,
       "result": "pass",
-      "note": "Outreach passed local validation for Maya Chen (local match score 100)."
+      "note": "Outreach passed local validation for Shuzhu Chen (local match score 66). Selected outreach variant: executive_brief. Outreach variants: {\"variants\": {\"warm_direct\": \"Hi Shuzhu, your Kafka and real-time data pipeline work at Kismet XYZ stands out. We’re building high quality real-time data warehouses for TikTok LIVE. Open to a quick chat?\",\"startup_casual\": \"Hi Shuzhu, your React dashboards and AWS serverless work caught my eye. We’re hiring for a role to build high quality real-time data warehouses at TikTok. Worth a quick conversation?\",\"executive_brief\": \"Hi Shuzhu, your Python, SQL, and real-time systems experience aligns with our need to build high quality real-time data warehouses. Would you be open to learning more?\"},\"selected\": \"executive_brief\"} Bias detection: {\"has_warning\": false,\"warnings\": [],\"recommended_action\": \"No recruiting bias warning detected; continue with normal reviewer judgment.\"}"
     },
     {
       "step": 5,
       "action": "generate_candidate_summary",
       "attempt": 1,
       "result": "pass",
-      "note": "Generated summary for locally selected candidate Maya Chen."
+      "note": "Generated summary for locally selected candidate Shuzhu Chen. Applied match interpretation to candidate_summary.fit_reason."
     }
   ]
 }
