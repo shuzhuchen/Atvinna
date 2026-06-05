@@ -1,0 +1,99 @@
+{
+  "candidate_search_strategy": {
+    "target_backgrounds": [
+      "Software Engineering",
+      "Computer Science",
+      "Backend Development",
+      "Distributed Systems",
+      "AI/ML Engineering",
+      "Systems Programming",
+      "Performance Optimization"
+    ],
+    "target_companies": [
+      "growth-stage tech companies",
+      "AI-native startups",
+      "scalable backend infrastructure teams",
+      "LLM application companies",
+      "agent framework developers",
+      "data-driven optimization platforms"
+    ],
+    "keywords": [
+      "Go",
+      "Python",
+      "Java",
+      "C++",
+      "backend engineering",
+      "distributed systems",
+      "system design",
+      "scalability",
+      "reliability",
+      "performance optimization",
+      "AIGC",
+      "LLM applications",
+      "agent frameworks",
+      "AI coding tools",
+      "workflow automation",
+      "data-driven optimization",
+      "experimentation platforms",
+      "user-facing products"
+    ],
+    "seniority": "Senior (3+ years of experience)"
+  },
+  "boolean_query": "( ( \"Software Engineering\" OR \"Computer Science\" OR \"Backend Development\" OR \"Distributed Systems\" OR \"AI/ML Engineering\" OR \"Systems Programming\" OR \"Performance Optimization\" ) AND ( \"Go\" OR \"Python\" OR \"Java\" OR \"C++\" OR \"backend engineering\" OR \"distributed systems\" OR \"system design\" OR \"scalability\" OR \"reliability\" OR \"performance optimization\" OR \"AIGC\" OR \"LLM applications\" OR \"agent frameworks\" OR \"AI coding tools\" OR \"workflow automation\" OR \"data-driven optimization\" OR \"experimentation platforms\" OR \"user-facing products\" ) AND ( \"Senior\" OR \"3+ years\" OR \"Senior Engineer\" OR \"Staff Engineer\" OR \"Principal Engineer\" ) ) AND ( ( \"growth-stage tech\" OR \"AI-native startup\" OR \"scalable backend infrastructure\" OR \"LLM application\" OR \"agent framework\" OR \"data-driven optimization platform\" ) )",
+  "outreach_message": {
+    "outreach_message": "Hi Maya, your Python automation and LLM integrations caught my eye. We’re building the next generation of growth systems at TikTok’s backend team. Open to a quick chat?",
+    "specific_detail": "next generation of growth",
+    "character_count": 168,
+    "attempts": 1
+  },
+  "candidate_summary": {
+    "name": "Maya Chen",
+    "current_company": "Northstar Data Labs",
+    "key_skills": [
+      "Python",
+      "LLM APIs",
+      "AI Workflow Automation",
+      "REST APIs",
+      "CLI Tools"
+    ],
+    "fit_reason": "Maya demonstrates strong alignment with the JD’s core backend engineering requirements through 1+ years of hands-on experience building Python services, integrating LLM APIs into workflows, and designing scalable data exchange schemas. Her expertise in AI-driven automation directly supports the AIGC and workflow optimization priorities for TikTok’s growth systems. Additionally, her recent role at Northstar Data Labs aligns with the growth-stage, data-driven backend engineering context described in the JD.",
+    "concerns": "Should confirm proficiency in Go and Java, as these are explicitly listed in the JD’s minimum qualifications. Experience with distributed systems, scalability, and reliability should also be verified, as these are critical for the role but not explicitly demonstrated in the provided profile."
+  },
+  "pipeline_trace": [
+    {
+      "step": 1,
+      "action": "extract_jd_signals",
+      "attempt": 1,
+      "result": "pass",
+      "note": "Extracted role signals and missing information."
+    },
+    {
+      "step": 2,
+      "action": "generate_search_strategy",
+      "attempt": 1,
+      "result": "pass",
+      "note": "Seniority decision: Senior (3+ years of experience)"
+    },
+    {
+      "step": 3,
+      "action": "generate_boolean_query",
+      "attempt": 1,
+      "result": "pass",
+      "note": "Generated one sourcing-style Boolean query."
+    },
+    {
+      "step": 4,
+      "action": "generate_outreach_message",
+      "attempt": 1,
+      "result": "pass",
+      "note": "Outreach passed local validation for Maya Chen (local match score 100)."
+    },
+    {
+      "step": 5,
+      "action": "generate_candidate_summary",
+      "attempt": 1,
+      "result": "pass",
+      "note": "Generated summary for locally selected candidate Maya Chen."
+    }
+  ]
+}

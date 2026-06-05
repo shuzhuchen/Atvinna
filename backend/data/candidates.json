@@ -1,0 +1,281 @@
+[
+  {
+    "candidate": {
+      "full_name": "Sophia Martinez",
+      "location": "Los Angeles, CA",
+      "email": "sophia.martinez@example.com",
+      "phone": "(310) 555-1234",
+      "linkedin_url": "https://linkedin.com/in/sophia-martinez-example",
+      "summary": "Finance professional with 6 years of FP&A experience in media and digital content companies."
+    },
+    "education": [
+      {
+        "degree": "Bachelor of Science",
+        "major": "Statistics",
+        "school": "UCLA",
+        "graduation_year": 2019
+      }
+    ],
+    "experience": [
+      {
+        "company": "Warner Bros. Discovery",
+        "title": "Senior Financial Analyst",
+        "location": "Los Angeles, CA",
+        "start_date": "2022-01",
+        "end_date": "Present",
+        "responsibilities": [
+          "Lead quarterly forecasting and annual budgeting processes.",
+          "Develop financial models for investment evaluation.",
+          "Perform monthly variance analysis.",
+          "Support management reporting and business reviews."
+        ]
+      },
+      {
+        "company": "NBCUniversal",
+        "title": "Financial Analyst",
+        "location": "Universal City, CA",
+        "start_date": "2019-06",
+        "end_date": "2021-12",
+        "responsibilities": [
+          "Supported FP&A activities.",
+          "Prepared management reports.",
+          "Performed profitability analysis."
+        ]
+      }
+    ],
+    "skills": {
+      "finance": ["FP&A", "Budgeting", "Forecasting", "Financial Modeling", "Variance Analysis"],
+      "technical": ["SQL", "Power BI", "Tableau", "Excel"],
+      "languages": ["English", "Spanish"]
+    }
+  },
+  {
+    "candidate": {
+      "full_name": "Maya Chen",
+      "location": "San Francisco, CA",
+      "email": "maya.chen@example.com",
+      "phone": "(415) 555-0188",
+      "linkedin_url": "https://linkedin.com/in/maya-chen-example",
+      "summary": "Software engineer focused on Python automation, LLM integrations, and developer productivity tools."
+    },
+    "education": [
+      {
+        "degree": "Bachelor of Science",
+        "major": "Computer Science",
+        "school": "University of Washington",
+        "graduation_year": 2023
+      }
+    ],
+    "experience": [
+      {
+        "company": "Northstar Data Labs",
+        "title": "Software Engineer",
+        "location": "San Francisco, CA",
+        "start_date": "2023-07",
+        "end_date": "2024-06",
+        "responsibilities": [
+          "Build Python services and command-line automation tools.",
+          "Integrate LLM APIs into internal productivity workflows.",
+          "Design structured schemas for data exchange.",
+          "Write technical documentation for engineering teams."
+        ]
+      }
+    ],
+    "skills": {
+      "engineering": ["Python", "REST APIs", "Pydantic", "CLI Tools", "Git"],
+      "ai": ["LLM APIs", "Prompt Engineering", "AI Workflow Automation"],
+      "languages": ["English", "Mandarin"]
+    }
+  },
+  {
+    "candidate": {
+      "full_name": "Daniel Brooks",
+      "location": "New York, NY",
+      "email": "daniel.brooks@example.com",
+      "phone": "(212) 555-0142",
+      "linkedin_url": "https://linkedin.com/in/daniel-brooks-example",
+      "summary": "Recruiting operations specialist with experience improving sourcing workflows and talent analytics."
+    },
+    "education": [
+      {
+        "degree": "Bachelor of Arts",
+        "major": "Business Administration",
+        "school": "Baruch College",
+        "graduation_year": 2020
+      }
+    ],
+    "experience": [
+      {
+        "company": "TalentGrid",
+        "title": "Recruiting Operations Analyst",
+        "location": "New York, NY",
+        "start_date": "2022-03",
+        "end_date": "Present",
+        "responsibilities": [
+          "Improve recruiter sourcing and outreach workflows.",
+          "Build dashboards for funnel conversion and response rates.",
+          "Maintain ATS data quality and reporting.",
+          "Partner with hiring managers on role intake."
+        ]
+      }
+    ],
+    "skills": {
+      "recruiting": ["Sourcing", "ATS Operations", "Recruiting Analytics", "Hiring Manager Intake"],
+      "technical": ["SQL", "Looker", "Excel", "Automation"],
+      "languages": ["English"]
+    }
+  },
+  {
+    "candidate": {
+      "full_name": "Priya Nair",
+      "location": "Austin, TX",
+      "email": "priya.nair@example.com",
+      "phone": "(512) 555-0176",
+      "linkedin_url": "https://linkedin.com/in/priya-nair-example",
+      "summary": "Data scientist with experience building machine learning workflows and communicating insights to business teams."
+    },
+    "education": [
+      {
+        "degree": "Master of Science",
+        "major": "Data Science",
+        "school": "Georgia Tech",
+        "graduation_year": 2021
+      }
+    ],
+    "experience": [
+      {
+        "company": "BrightMetric",
+        "title": "Data Scientist",
+        "location": "Austin, TX",
+        "start_date": "2021-08",
+        "end_date": "Present",
+        "responsibilities": [
+          "Develop predictive models and data pipelines.",
+          "Analyze product and operational performance.",
+          "Present findings to cross-functional stakeholders.",
+          "Prototype NLP-powered internal tools."
+        ]
+      }
+    ],
+    "skills": {
+      "data": ["Python", "SQL", "Machine Learning", "Data Analysis", "Statistics"],
+      "technical": ["NLP", "Pandas", "Tableau", "Data Pipelines"],
+      "languages": ["English", "Hindi"]
+    }
+  },
+  {
+    "candidate": {
+      "full_name": "Marcus Reed",
+      "location": "Chicago, IL",
+      "email": "marcus.reed@example.com",
+      "phone": "(312) 555-0164",
+      "linkedin_url": "https://linkedin.com/in/marcus-reed-example",
+      "summary": "Product operations manager experienced in scaling processes, strategic planning, and cross-functional execution."
+    },
+    "education": [
+      {
+        "degree": "Bachelor of Business Administration",
+        "major": "Operations Management",
+        "school": "University of Michigan",
+        "graduation_year": 2018
+      }
+    ],
+    "experience": [
+      {
+        "company": "FlowScale",
+        "title": "Product Operations Manager",
+        "location": "Chicago, IL",
+        "start_date": "2021-02",
+        "end_date": "Present",
+        "responsibilities": [
+          "Scale operating processes for a growing SaaS product.",
+          "Lead strategic planning and business reviews.",
+          "Coordinate execution across product, finance, and sales.",
+          "Create performance improvement proposals."
+        ]
+      }
+    ],
+    "skills": {
+      "operations": ["Strategic Planning", "Process Improvement", "Business Reviews", "Stakeholder Management"],
+      "technical": ["Excel", "Tableau", "Jira", "SQL"],
+      "languages": ["English"]
+    }
+  },
+  {
+    "candidate": {
+      "full_name": "Shuzhu Chen",
+      "location": "San Jose, CA 95131",
+      "email": "shuzhuchen98@gmail.com",
+      "phone": "408-876-2451",
+      "linkedin_url": "https://linkedin.com/in/ShuzhuChen",
+      "summary": "Full-stack software engineer focused on AI applications, microservices, cloud infrastructure, data pipelines, and recruiter-facing product experiences."
+    },
+    "education": [
+      {
+        "degree": "Master of Science",
+        "major": "Interdisciplinary Engineering, Software Engineering focus",
+        "school": "San Jose State University",
+        "graduation_year": 2025
+      },
+      {
+        "degree": "Bachelor of Economics",
+        "major": "Mathematical Economics",
+        "school": "Shanghai University of Finance and Economics",
+        "graduation_year": 2020
+      }
+    ],
+    "experience": [
+      {
+        "company": "Kismet XYZ Inc.",
+        "title": "AI/ML Full-Stack Engineer",
+        "location": "San Jose, CA",
+        "start_date": "2025-01",
+        "end_date": "Present",
+        "responsibilities": [
+          "Develop real-time oil and gas well monitoring dashboards processing high-volume sensor data with React, Node.js, Kafka, MongoDB, Redis, and AWS serverless architecture.",
+          "Design event-driven data pipelines using Kafka and AWS Lambda to reduce data latency and improve data accuracy.",
+          "Build Redis caching layers and 15+ RESTful APIs to improve platform responsiveness and reduce database load.",
+          "Establish CI/CD pipelines with GitHub Actions and CloudWatch monitoring dashboards for API performance tracking.",
+          "Design responsive dashboard interfaces with React and Tailwind CSS to deliver real-time KPIs to stakeholders."
+        ]
+      },
+      {
+        "company": "Bank of China",
+        "title": "Software Engineer",
+        "location": "Shanghai, China",
+        "start_date": "2020-06",
+        "end_date": "2021-07",
+        "responsibilities": [
+          "Developed responsive web interfaces with Vue.js, HTML, CSS, and JavaScript for internal risk management workflows.",
+          "Built backend modules with Java and Spring following scalable enterprise design patterns.",
+          "Implemented data processing microservices to generate risk assessment reports and optimize SQL Server queries.",
+          "Managed codebase with Git and SVN branching strategies and code review processes.",
+          "Partnered with end users to gather requirements and deliver features improving workflow and reporting."
+        ]
+      },
+      {
+        "company": "Institute for Advanced Research, SUFE",
+        "title": "Software Developer",
+        "location": "Shanghai, China",
+        "start_date": "2019-06",
+        "end_date": "2020-06",
+        "responsibilities": [
+          "Built a data management platform with Python, Flask, MySQL, Docker, and Tableau for 10K+ longitudinal education samples.",
+          "Built automated ETL pipelines with Python and Pandas to clean and standardize survey data.",
+          "Developed RESTful APIs connecting MySQL databases with Tableau dashboards for dynamic reporting.",
+          "Designed interactive Tableau dashboards for policy consultation reports.",
+          "Optimized data pipelines and enabled real-time dashboard updates for 500+ monthly active users."
+        ]
+      }
+    ],
+    "skills": {
+      "languages": ["Python", "Java", "C++", "SQL", "HTML/CSS", "JavaScript", "R"],
+      "frontend": ["React.js", "Vue.js", "Tailwind CSS", "Figma"],
+      "backend": ["Node.js", "Flask", "Spring", "RESTful APIs", "Microservices", "Kafka"],
+      "data": ["MySQL", "MongoDB", "Redis", "Pinecone", "Pandas", "Tableau"],
+      "cloud": ["AWS Lambda", "AWS S3", "API Gateway", "ECS Fargate", "ALB", "AWS Amplify", "CloudWatch", "Docker"],
+      "ai": ["LangChain", "RAG", "Agentic AI", "LLM Applications"],
+      "devops": ["Git", "GitHub Actions", "CI/CD"]
+    }
+  }
+]
