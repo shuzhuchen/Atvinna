@@ -2,7 +2,6 @@ import { useState } from "react";
 import { BriefcaseBusiness } from "lucide-react";
 import { DashboardForm } from "./components/DashboardForm";
 import { EmptyResults, LoadingResults, ResultsTabs } from "./components/ResultsTabs";
-import { WorkflowProgress } from "./components/WorkflowProgress";
 import { isPipelineOutput, type PipelineOutput } from "./types";
 
 export default function App() {
@@ -65,11 +64,6 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-[1500px] p-4 sm:p-5 lg:p-8">
-        <WorkflowProgress
-          hasJobDescription={Boolean(jobDescription.trim())}
-          hasResult={Boolean(result)}
-          loading={loading}
-        />
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:grid lg:grid-cols-[420px_minmax(0,1fr)]">
           <DashboardForm
             jobDescription={jobDescription}

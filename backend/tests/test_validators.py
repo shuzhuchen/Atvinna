@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import inspect
 import unittest
 
+import backend.agent.candidate_scoring as candidate_scoring
 from backend.agent.candidate_scoring import interpret_match_score, score_candidates_locally
 from backend.agent.candidate_store import load_candidates
+from backend.agent.prompts import search_strategy_prompt
 from backend.agent.schemas import CandidateSearchStrategy, JDSignals
 from backend.agent.validators import (
     detect_recruiting_bias,
@@ -13,6 +16,39 @@ from backend.agent.validators import (
 
 
 class ValidatorTests(unittest.TestCase):
+    def test_scoring_logic_does_not_hardcode_profession_specific_vocabulary(self) -> None:
+        source = inspect.getsource(candidate_scoring._candidate_preference_vocabulary)
+
+        profession_specific_terms = [
+            "React",
+            "AWS",
+            "Kafka",
+            "FP&A",
+            "Power BI",
+            "RAG",
+            "microservices",
+        ]
+        for term in profession_specific_terms:
+            self.assertNotIn(term, source)
+
+    def test_search_strategy_prompt_requires_level_plus_yoe_when_available(self) -> None:
+        prompt = search_strategy_prompt(
+            JDSignals(
+                role_type="Backend Engineer",
+                required_skills=["Python"],
+                seniority_indicators=["Minimum 5 years of backend engineering experience"],
+                seniority_level="senior",
+                company_stage="AI startup",
+                missing_information=[],
+                specific_detail="backend engineering experience",
+            ).model_dump_json()
+        )
+
+        self.assertIn('Format seniority as "level, yoe"', prompt)
+        self.assertIn('"senior, 5+ years"', prompt)
+        self.assertIn("no YOE stated", prompt)
+        self.assertIn("do not invent years", prompt)
+
     def test_interpret_match_score_boundaries(self) -> None:
         self.assertEqual(
             interpret_match_score(95),

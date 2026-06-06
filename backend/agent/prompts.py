@@ -63,6 +63,13 @@ Use only the extracted JD signals below. Return only JSON with exactly these key
 Rules:
 - Recommend backgrounds, companies, and keywords grounded in the signals.
 - If seniority is ambiguous, say so and choose a conservative sourcing range.
+- Format seniority as "level, yoe" when the extracted signals include an
+  explicit years-of-experience requirement. Examples:
+  "senior, 5+ years"
+  "mid, 3-5 years"
+  "intern, no YOE stated"
+- If no explicit years-of-experience requirement appears in seniority_indicators,
+  return the level plus "no YOE stated"; do not invent years.
 - Do not use protected characteristics, demographic proxies, or prestige-only filters.
 
 Extracted JD signals:

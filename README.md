@@ -1,38 +1,34 @@
 # Atvinna Recruiting Copilot
 
-Atvinna is an AI recruiting copilot. It accepts a Job Description and optional hiring manager notes,
-runs five distinct sequential LLM calls, self-validates outreach, and writes a
-complete recruiting workflow to `output.json`.
+Atvinna is an AI recruiting copilot agent. A recruiter pastes a Job Description
+and optional hiring manager notes, then Atvinna runs a structured recruiting
+workflow that produces a sourcing strategy, Boolean query, personalized
+outreach, candidate summary, and execution trace.
 
-The React dashboard is an optional workflow UI. The required one-command CLI
-entrypoint remains:
+The project can run as a CLI with:
 
 ```bash
 python main.py
 ```
 
-## Required Pipeline
+It also includes a React + FastAPI dashboard for a recruiter-friendly UI.
 
-1. `extract_jd_signals`  
-   Extracts role type, required skills, seniority indicators, company stage,
-   dynamic skill aliases, adjacent backgrounds, seniority level, missing
-   information, and an exact JD detail for outreach.
-2. `generate_search_strategy`  
-   Uses Step 1 output to generate target backgrounds, target companies,
-   keywords, and a seniority recommendation.
-3. `generate_boolean_query`  
-   Uses Step 2 output to generate one sourcing-style Boolean query.
-4. `generate_outreach_message`  
-   Generates personalized startup-oriented outreach, validates it locally, and
-   retries up to three times.
-5. `generate_candidate_summary`  
-   Uses all prior pipeline context and the locally selected candidate to
-   generate a candidate summary card.
+## Workflow
 
-Each step makes its own LLM API call. The steps are not collapsed into one
-prompt.
+![Atvinna workflow](workflow.png)
 
-## Setup On A Clean Machine
+Atvinna keeps the AI work separated into five LLM calls. Candidate matching is
+handled locally between Boolean query generation and outreach, so the outreach
+message can be written to a real selected candidate rather than a generic
+placeholder.
+
+The generated result is saved here:
+
+[output.json](output.json)
+
+## How To Run
+
+Set up the project on a clean machine:
 
 ```bash
 git clone <repo-url>
@@ -49,22 +45,23 @@ MISTRAL_API_KEY=your_mistral_api_key_here
 MISTRAL_MODEL=mistral-small-latest
 ```
 
-Run the required CLI and paste the JD when prompted:
+Run the CLI:
 
 ```bash
 python main.py
 ```
 
-Finish each multiline input with a line containing only `END`.
+Paste the Job Description when prompted. Finish each multiline input with a
+line containing only:
 
-The command uses the recruiter-provided JD, makes five real Mistral API calls,
-and writes `output.json` in the repository root.
+```text
+END
+```
 
-`MISTRAL_API_KEY` is required. The production pipeline does not use hardcoded
-mock responses because the assignment requires every step to make a real LLM
-API call.
+The command makes five real Mistral API calls and writes `output.json` in the
+repository root. There are no hardcoded LLM responses in the production flow.
 
-## Optional Dashboard
+## Dashboard
 
 Start the FastAPI backend:
 
@@ -80,9 +77,19 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`.
+Open:
 
-The dashboard sends `POST /api/run-pipeline` with:
+```text
+http://localhost:5173
+```
+
+The dashboard sends:
+
+```http
+POST /api/run-pipeline
+```
+
+with:
 
 ```json
 {
@@ -91,17 +98,158 @@ The dashboard sends `POST /api/run-pipeline` with:
 }
 ```
 
-The dashboard does not prefill a JD. Recruiters must paste the Job Description
-they want the pipeline to process.
+The dashboard does not prefill a JD. The recruiter provides the Job Description
+and notes.
 
-## Candidate Database
+## Step By Step
 
-Atvinna loads six structured candidate profiles from
-`backend/data/candidates.json`. After Step 3, Atvinna locally scores all six
-profiles against the JD signals and search strategy. This deterministic scoring
-layer is not an LLM step, so the required five-step pipeline remains intact.
+### Step 1: Extract JD Signals
 
-The current database is software-engineering focused:
+`extract_jd_signals`
+
+The first LLM call extracts structured signals from the JD:
+
+- role type
+- required skills
+- seniority indicators
+- seniority level
+- company or team context
+- dynamic skill aliases
+- adjacent candidate backgrounds
+- missing information
+- one exact JD detail for outreach
+
+This step turns raw JD text into a schema the rest of the pipeline can use.
+
+### Step 2: Generate Search Strategy
+
+`generate_search_strategy`
+
+The second LLM call converts the JD signals into a sourcing strategy:
+
+- target backgrounds
+- target company types
+- keywords
+- seniority
+
+When the JD includes years of experience, seniority is formatted as
+`level, yoe`, for example:
+
+```text
+senior, 5+ years
+mid, 3-5 years
+```
+
+If the JD does not state years of experience, Atvinna uses:
+
+```text
+no YOE stated
+```
+
+### Step 3: Generate Boolean Query
+
+`generate_boolean_query`
+
+The third LLM call creates one sourcing-style Boolean query from the search
+strategy. The query is then validated locally for:
+
+- balanced parentheses
+- at least one `AND` or `OR`
+- no empty quotes
+- no repeated operators such as `AND AND`
+- enough searchable terms
+- no obvious protected-class filters
+
+If validation fails, Step 3 retries with the exact validation feedback.
+
+### Step 4.1 Local Candidate Matching
+
+After Step 3, Atvinna loads candidates from:
+
+[backend/data/candidates.json](backend/data/candidates.json)
+
+The local scorer evaluates every candidate against the extracted JD signals,
+search strategy, and hiring manager notes. This is deterministic Python logic,
+not another LLM step.
+
+The selected top candidate is passed into outreach and summary generation.
+This is why outreach can start with a real candidate name.
+
+### Step 4.2: Generate Outreach
+
+`generate_outreach_message`
+
+The fourth LLM call generates three outreach variants:
+
+- `warm_direct`
+- `startup_casual`
+- `executive_brief`
+
+Each variant is validated locally:
+
+- under 300 characters
+- includes the selected candidate first name
+- includes one exact detail from the JD
+- avoids generic recruiting phrases
+- ends with a simple low-pressure CTA
+
+If all variants fail, Atvinna retries up to three attempts. Each attempt is
+recorded in `pipeline_trace`.
+
+### Step 5.1: Generate Candidate Summary
+
+`generate_candidate_summary`
+
+The fifth LLM call summarizes the locally selected candidate using:
+
+- the original JD
+- JD signals
+- search strategy
+- Boolean query
+- outreach result
+- candidate profile
+- local match evidence
+
+The summary is validated so it matches the locally selected candidate.
+
+## Step 5.2 Candidate Matching And Interpretation
+
+Candidate scoring is designed to be explainable and domain-neutral. It does not
+use a hardcoded software, finance, or industry-specific vocabulary. Match
+signals come from the current JD, hiring manager notes, and candidate profiles.
+
+The local score uses:
+
+- required skills
+- target background and role fit
+- keywords and tools
+- seniority or context
+- hiring manager preferences
+
+Atvinna shows one overall match percentage and a recruiter-facing label:
+
+```text
+80-100: Recruiter Screen
+65-79:  Potential Match
+50-64:  Consider
+35-49:  Low Match
+Below 35: Not Recommended
+```
+
+The dashboard keeps the candidate cards compact: name, company, score,
+interpretation, top matched skills, and a concise explanation.
+
+## Additional Handlers
+
+### 1. Ambiguous Seniority
+
+Atvinna does not invent seniority. If the JD is unclear, Step 1 records missing
+information and Step 2 chooses a conservative sourcing range. This prevents an
+ambiguous role from being silently treated as senior.
+
+### 2. Candidate Database
+
+The current sample database contains six software-engineering candidates:
 
 - Sophia Martinez: new grad frontend engineer
 - Maya Chen: early-career AI software engineer
@@ -110,322 +258,164 @@ The current database is software-engineering focused:
 - Marcus Reed: senior software engineer
 - Shuzhu Chen: AI/ML full-stack engineer
 
-The locally selected top candidate is then passed into Step 4 so the outreach
-can start with the candidate's first name and reference real profile evidence.
-Step 5 summarizes that same selected candidate.
+The scoring logic itself is not limited to software roles. The database can be
+replaced with candidates from another domain as long as they follow the same
+schema.
 
-The API response includes `candidate_matches` for the dashboard. The required
-`output.json` remains unchanged and contains only the assignment's five required
-top-level keys.
+### 3. Boolean Query Checks
 
-Each dashboard candidate match shows one combined score plus the breakdown
-underneath:
+Atvinna validates the Boolean query before writing the final output. Invalid
+queries trigger retries, and any remaining warnings are preserved in
+`pipeline_trace`.
 
-```text
-Overall Match: 86
-JD Match: 70
-Hiring Manager Preference: +16
-```
+### 4. Recruiting Bias Checks
 
-`JD Match` is the base fit against the extracted JD signals and search strategy.
-Step 1 dynamically extracts JD-specific `related_skill_aliases`,
-`adjacent_backgrounds`, and `seniority_level`. The local scorer then uses those
-signals deterministically instead of relying on a fixed industry taxonomy.
+Atvinna scans the JD, strategy, Boolean query, and outreach message for risky
+patterns such as:
 
-The score uses coverage rather than loose keyword accumulation:
+- age-coded language
+- gender-coded language
+- nationality or language restrictions
+- school prestige filters
+- overly narrow company targeting
 
-- required skills: 50%
-- target background / role fit: 25%
-- keywords and tools: 15%
-- seniority or context: 10%
+The guardrail records warnings in `pipeline_trace` without changing the
+required output schema.
 
-Score caps keep the result honest. A candidate must satisfy most required
-skills and target background signals to reach the 90-100 range. Candidates with
-partial skill coverage or adjacent backgrounds are capped lower, even when they
-match several keywords.
+### 5. Outreach Self-Correction
 
-`Hiring Manager Preference` is a small capped add-on from optional notes, such
-as preferred industries, tools, or responsibilities. It can break ties but
-cannot push a candidate with weak core JD coverage into a top-match score.
-
-## Score Interpretation
-
-Atvinna keeps the scoring rubric unchanged, then applies a separate match
-interpretation layer after the final score is calculated:
-
-```text
-80-100: Recruiter Screen | Strong enough for recruiter outreach
-65-79:  Potential Match  | Review before outreach
-50-64:  Consider         | Possible fit with gaps
-35-49:  Low Match        | Unlikely fit
-Below 35: Not Recommended | Do not prioritize
-```
-
-Because the assignment output schema should not gain new top-level keys, the
-interpretation is included in `fit_reason` for candidate matches and appended
-as recruiter guidance in the selected candidate summary. Candidate match
-explanations change tone by score band, so lower-scoring candidates are not
-described as matching the role. The dashboard displays the numeric score as a
-percentage and shows only the `match_level` label to avoid repetitive UI copy.
-
-## Bonus: Boolean Query Validator
-
-Step 3 validates the generated `boolean_query` locally before `output.json` is
-written.
-
-`validate_boolean_query(boolean_query: str)` returns:
-
-```json
-{
-  "is_valid": true,
-  "warnings": [],
-  "suggestions": []
-}
-```
-
-The validator checks:
-
-- balanced parentheses
-- at least one `AND` or `OR`
-- no empty quotes
-- enough searchable terms to avoid a one-keyword broad query
-- no repeated operators such as `AND AND` or `OR OR`
-- no obvious protected-class filters
-
-If validation fails, Step 3 retries up to two times with the validation feedback
-included in the next LLM prompt. If the query is still invalid after those
-retries, the pipeline continues with warnings recorded in `pipeline_trace`
-instead of changing the required output schema.
-
-## Step 4 Self-Correction
-
-Step 4 generates three outreach variants in one LLM call:
-
-- `warm_direct`
-- `startup_casual`
-- `executive_brief`
-
-Each variant is validated locally in Python:
-
-- `len(outreach_message) < 300`
-- `specific_detail` is non-empty
-- `specific_detail` is grounded in the JD or extracted JD signals
-- `outreach_message` includes that specific detail or a close exact phrase
-- banned generic outreach phrases are not present
-- the message opens with the selected candidate's first name
-- the message ends with a simple low-pressure CTA
-
-The best passing variant is selected as the required
-`outreach_message.outreach_message`. The other variants are stored only in
-`pipeline_trace` and printed in the CLI; they are not added as new top-level
-keys.
-
-If validation fails, the failure reason is logged as `result: "retry"` and is
-included in the next LLM prompt. After three failed attempts, the trace records
-`result: "fail"` and the pipeline exits gracefully.
-
-Run the local guardrail validator tests:
-
-```bash
-python -m unittest backend/tests/test_validators.py
-```
-
-## Ambiguous Seniority
-
-When a JD does not contain a clear seniority signal, Atvinna does not invent
-one. Step 1 records the missing signal, and Step 2 recommends a conservative
-range based on the available evidence. For example, an ambiguous individual
-contributor role may be sourced as junior-to-mid rather than silently treated
-as senior. This decision is written into the strategy and pipeline trace.
-
-## Guardrails
-
-Boolean queries can cause harm when they encode demographic proxies,
-protected-class filters, or prestige-only assumptions. The Step 2 and Step 3
-prompts explicitly restrict the strategy and query to job-relevant
-backgrounds, company types, and skills. `validate_boolean_query()` also checks
-syntax, breadth, repeated operators, empty quotes, and protected-class filters
-before the final output is written.
-
-### Bias Detection Guardrail
-
-Atvinna also runs `detect_recruiting_bias()` before finalizing `output.json`.
-This check scans the JD, search strategy, Boolean query, and outreach message
-for risky recruiting language.
-
-It detects warnings such as:
-
-- age-coded terms like `young`, `recent grad only`, `energetic`, or
-  `digital native`
-- gender-coded terms like `aggressive`, `dominant`, or `nurturing`
-- nationality or language issues like `native English speaker`, `US-born`, or
-  `local only`
-- school prestige filters like `Ivy League only` or `top school only`
-- overly narrow company targeting like `FAANG only` or `ex-Google only`
-
-The guardrail is non-blocking by default. It records warnings in
-`pipeline_trace` and prints them in the CLI so a recruiter or reviewer can
-broaden the language before using the output.
-
-Generic outreach can damage employer brand. Step 4 requires a concrete phrase
-from the JD and rejects messages that do not include it.
+Outreach is not trusted just because the LLM generated it. The message must
+pass local checks for length, specificity, tone, candidate name, JD detail, and
+CTA. Failed attempts are logged and re-prompted with the exact failure reason.
 
 ## Sample Run
 
 ```text
-$ python main.py
-Paste the Job Description:
-Finish with a line containing only END.
-Paste optional Hiring Manager Notes, or enter END immediately:
-Finish with a line containing only END.
-Pipeline complete. Wrote output.json.
-Trace entries: 5
+Company name: Tiktok
+Senior Backend Software Engineer - Innovative Growth
+Location: San Jose
+
+Employment Type: Regular
+
+Responsibilities
+We are building the next generation of growth and content optimization systems for TikTok, powered by AIGC technologies and innovative search and discovery strategies. Our mission is to drive user growth and improve user experience through intelligent content optimization, scalable backend systems, and new growth opportunities across evolving digital ecosystems.
+Our team operates at the intersection of product, data, engineering, and AI-driven content technologies, turning new ideas and technical advances into scalable, real-world growth solutions used by millions of users. We work closely with product, algorithm, data, and design partners to ensure that advanced technologies translate into measurable business impact and intuitive user experiences across TikTok surfaces such as Web, Lite, and other emerging platforms.
+
+Responsibilities
+- Design and develop backend systems that power user growth and content optimization across TikTok platforms
+- Drive innovative growth initiatives across search, discovery, and other emerging traffic channels
+- Develop AIGC-powered solutions and scalable systems for content optimization, experimentation, and automated workflows
+- Build and improve core growth and content systems with strong ownership of scalability, reliability, and performance
+- Lead complex projects end-to-end, from technical design to production rollout, with strong ownership of quality and business impact
+- Partner closely with product, data, algorithm, and design teams to deliver cross-functional technical solutions
+- Contribute to engineering excellence through strong technical design, code quality, operational best practices, and system reliability
+
+Qualifications
+
+Minimum Qualifications
+- Bachelor’s degree or above in Computer Science or a related field
+- 3+ years of industry experience in backend engineering or distributed systems
+- Strong experience designing and building large-scale backend services or consumer-facing platforms
+- Experience working on content, growth, recommendation, experimentation, or search-related systems
+- Proficiency in one or more of the following languages: Go, Python, Java, or C++
+- Strong system design, problem-solving, and software engineering skills
+- Good communication skills and the ability to collaborate effectively across teams
+
+Preferred Qualifications
+- Experience with AIGC, LLM applications, agent frameworks, AI coding tools, or workflow automation systems
+- Experience building data-driven optimization or experimentation platforms
+- Experience delivering user-facing products from concept to production in a fast-paced environment
+- Interest in search, discovery, and growth ecosystems, including areas such as SEO, GEO, or emerging AI-driven traffic channels
+- Experience with AI agents or agentic workflows, and interest in applying them to engineering efficiency and product development
+
+Job Information
+
+【For Pay Transparency】Compensation Description (Annually)
+
+The base salary range for this position in the selected city is $212800 - $387600 annually.​
+
+Compensation may vary outside of this range depending on a number of factors, including a candidate’s qualifications, skills, competencies and experience, and location. Base pay is one part of the Total Package that is provided to compensate and recognize employees for their work, and this role may be eligible for additional discretionary bonuses/incentives, and restricted stock units.​
+
+Benefits may vary depending on the nature of employment and the country work location. Employees have day one access to medical, dental, and vision insurance, a 401(k) savings plan with company match, paid parental leave, short-term and long-term disability coverage, life insurance, wellbeing benefits, among others. Employees also receive 10 paid holidays per year, 10 paid sick days per year and 17 days of Paid Personal Time (prorated upon hire with increasing accruals by tenure).​
+
+The Company reserves the right to modify or change these benefits programs at any time, with or without notice.​
+
+For Los Angeles County (unincorporated) Candidates:​
+
+Qualified applicants with arrest or conviction records will be considered for employment in accordance with all federal, state, and local laws including the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Our company believes that criminal history may have a direct, adverse and negative relationship on the following job duties, potentially resulting in the withdrawal of the conditional offer of employment:​
+
+1. Interacting and occasionally having unsupervised contact with internal/external clients and/or colleagues;​
+
+2. Appropriately handling and managing confidential information including proprietary and trade secret information and access to information technology systems; and​
+
+3. Exercising sound judgment.​
 ```
 
-The repository includes `output.json` from this software-engineering Mistral run.
+Generated output:
 
-```json
-{
-  "candidate_search_strategy": {
-    "target_backgrounds": [
-      "backend development",
-      "distributed systems engineering",
-      "software architecture",
-      "reliability engineering",
-      "performance engineering",
-      "machine learning engineering",
-      "data engineering",
-      "product engineering",
-      "growth engineering",
-      "AI platform engineering"
-    ],
-    "target_companies": [
-      "high-growth tech companies",
-      "AI-first startups",
-      "scalable infrastructure companies",
-      "content optimization platforms",
-      "search and discovery companies",
-      "experimentation platforms",
-      "workflow automation companies",
-      "LLM application companies",
-      "agent framework companies"
-    ],
-    "keywords": [
-      "backend engineer",
-      "distributed systems",
-      "system design",
-      "Go",
-      "Golang",
-      "Python",
-      "Java",
-      "C++",
-      "scalable systems",
-      "reliability engineering",
-      "AIGC",
-      "generative AI",
-      "LLM applications",
-      "agent frameworks",
-      "workflow automation",
-      "experimentation platforms",
-      "user-facing products",
-      "search and discovery systems"
-    ],
-    "seniority": "senior"
-  },
-  "boolean_query": "(backend engineer OR distributed systems OR system design OR Go OR Golang OR Python OR Java OR C++) AND (scalable systems OR reliability engineering OR AIGC OR generative AI OR LLM applications OR agent frameworks OR workflow automation OR experimentation platforms OR user-facing products OR search and discovery systems) AND (senior)",
-  "outreach_message": {
-    "outreach_message": "Hi Shuzhu, your Python, Java, and microservices background stands out. We’re hiring for a backend role building the next generation of growth and content optimization systems. Worth a quick conversation?",
-    "specific_detail": "next generation of growth and content optimization systems",
-    "character_count": 203,
-    "attempts": 2
-  },
-  "candidate_summary": {
-    "name": "Shuzhu Chen",
-    "current_company": "Kismet XYZ Inc.",
-    "key_skills": [
-      "Python",
-      "Java",
-      "Microservices",
-      "AI/ML Applications",
-      "Distributed Systems"
-    ],
-    "fit_reason": "Shuzhu has strong backend engineering experience with Python and Java, including microservices and distributed systems design at Kismet XYZ Inc., where they built scalable event-driven data pipelines and RESTful APIs. Their AI/ML focus aligns with the AIGC and LLM applications mentioned in the JD. Recruiter guidance: Consider.",
-    "concerns": "Go proficiency is not evident in the profile and should be confirmed in the recruiter screen. Scalability and reliability engineering experience at scale should also be verified."
-  },
-  "pipeline_trace": [
-    {
-      "step": 1,
-      "action": "extract_jd_signals",
-      "attempt": 1,
-      "result": "pass",
-      "note": "Extracted role signals and missing information."
-    },
-    {
-      "step": 2,
-      "action": "generate_search_strategy",
-      "attempt": 1,
-      "result": "pass",
-      "note": "Seniority decision: senior"
-    },
-    {
-      "step": 3,
-      "action": "generate_boolean_query",
-      "attempt": 1,
-      "result": "pass",
-      "note": "Boolean query validation: {\"is_valid\": true,\"warnings\": [],\"suggestions\": []}"
-    },
-    {
-      "step": 4,
-      "action": "generate_outreach_message",
-      "attempt": 1,
-      "result": "retry",
-      "note": "Invalid outreach JSON/schema: missing specific_detail"
-    },
-    {
-      "step": 4,
-      "action": "generate_outreach_message",
-      "attempt": 2,
-      "result": "pass",
-      "note": "Outreach passed local validation for Shuzhu Chen (local match score 53). Selected outreach variant: startup_casual."
-    },
-    {
-      "step": 5,
-      "action": "generate_candidate_summary",
-      "attempt": 1,
-      "result": "pass",
-      "note": "Generated summary for locally selected candidate Shuzhu Chen. Applied match interpretation to candidate_summary.fit_reason."
-    }
-  ]
-}
+[output.json](output.json)
+
+Run local checks:
+
+```bash
+python -m unittest discover -s backend/tests
+python -m compileall backend main.py
+cd frontend && npm run build
 ```
 
 ## Brief Write-Up
 
-**What would I improve with another week?**  
-I would add stronger malformed-response recovery for every LLM step, platform-
-specific Boolean query validation, candidate database upload/import support,
-and run history for comparing strategy iterations.
+### What would you improve with another week?
 
-**What did I notice that was not explicitly stated?**  
-The trace is not just logging; it is evidence that the pipeline really executed
-in sequence. The intermediate schemas also create trust because a reviewer can
-see where an unsupported assumption entered the workflow.
+With another week, I would improve the system in three areas.
 
-**Why five steps instead of one? What breaks if Steps 1 and 2 are collapsed?**  
-Each step has a different success criterion and can be inspected independently.
-If Steps 1 and 2 are collapsed, the search strategy can quietly skip missing
-information, invent seniority, or mix raw JD facts with sourcing assumptions.
+First, I would add embedding-based matching on top of the current deterministic
+scoring. The current scoring logic is inspectable, but it can miss equivalent
+experience when the wording differs between the JD and candidate profile.
+Embeddings would help compare responsibilities and background more
+semantically.
 
-**Which parts used AI and which required human judgment?**  
-AI generates JD signals, strategy, Boolean query, outreach, and candidate
-summary. Human judgment defines the schemas, prompt boundaries, seniority
-policy, bias guardrail, local outreach validation, retry limit, and graceful
-failure behavior.
+Second, I would improve the candidate data layer. The current version uses a
+fixed local `candidates.json` file so the workflow can run end-to-end. A more
+complete version would support uploading resumes, CSV files, or JSON candidate
+lists.
 
-## Verification
+Third, I would improve recruiter actions after matching. Recruiters should be
+able to review multiple candidates above a threshold, choose who to contact,
+edit outreach drafts, and export results.
 
-```bash
-python main.py
-python -m unittest backend/tests/test_validators.py
-cd frontend && npm run build
-```
+### What did you notice that was not explicitly stated?
+
+The assignment asks for a candidate summary, but it does not fully define where
+the candidate comes from. In a real recruiting workflow, a recruiter reviews a
+pool of candidates, not a single abstract profile. That is why Atvinna includes
+a local candidate database and deterministic scoring layer.
+
+I also noticed that outreach needs candidate selection to happen first. Without
+a selected candidate, the message cannot naturally say something like "Hi Marcus, ...".
+
+Finally, the trace is more than logging. It is evidence that the workflow
+actually ran as separate steps instead of one hidden prompt.
+
+### Why five steps instead of one?
+
+Each step has a different responsibility and a different validation point.
+Step 1 extracts JD facts. Step 2 turns those facts into a sourcing strategy.
+Step 3 creates a Boolean query. Step 4 writes and validates outreach. Step 5
+summarizes the selected candidate.
+
+If Steps 1 and 2 were collapsed, the agent could mix raw JD facts with sourcing
+assumptions. It might invent seniority, skip missing information, over-focus on
+prestige companies, or generate keywords without showing which JD signals they
+came from.
+
+### Which parts used AI and which parts required human judgment?
+
+AI was used for the language-heavy steps: extracting JD signals, creating the
+search strategy, generating the Boolean query, drafting outreach variants, and
+writing the selected candidate summary.
+
+Human judgment was required to design the system boundaries: schemas, five-step
+orchestration, local scoring, retry behavior, validation rules, trace logging,
+score interpretation, and recruiting guardrails. The AI generates content, but
+the application decides what is acceptable, traceable, and safe to use.

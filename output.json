@@ -1,58 +1,75 @@
 {
   "candidate_search_strategy": {
     "target_backgrounds": [
-      "data engineering",
-      "software engineering",
-      "computer science",
-      "data science",
-      "business analytics",
-      "data architecture"
+      "Backend Engineering",
+      "Distributed Systems",
+      "Software Engineering",
+      "Data Engineering",
+      "Machine Learning Engineering",
+      "Product Engineering",
+      "Platform Engineering",
+      "Infrastructure Engineering",
+      "Site Reliability Engineering",
+      "DevOps Engineering",
+      "Full-Stack Engineering",
+      "Performance Engineering",
+      "Scalability Engineering"
     ],
     "target_companies": [
-      "large scale tech company"
+      "high-growth tech companies",
+      "AI-driven product companies",
+      "content optimization platforms",
+      "search and discovery systems",
+      "recommendation engine companies",
+      "scalable systems startups",
+      "LLM application firms"
     ],
     "keywords": [
-      "data engineering",
-      "SQL",
-      "Python",
-      "data warehousing",
-      "data solutions",
-      "business problem solving",
-      "data system design",
-      "LLM applications",
-      "real-time data processing",
-      "streaming data processing",
-      "real-time analytics",
-      "data warehouse design",
-      "data warehouse architecture",
-      "large language model applications",
-      "LLM integration",
-      "batch data warehouses",
-      "traditional data warehouses",
-      "data platform engineering",
-      "data infrastructure engineering"
+      "Backend Engineer",
+      "Distributed Systems Engineer",
+      "Go Developer",
+      "Python Developer",
+      "Java Developer",
+      "C++ Developer",
+      "System Design",
+      "Scalable Systems",
+      "Reliability Engineering",
+      "Performance Optimization",
+      "AIGC",
+      "LLM Applications",
+      "AI Coding Tools",
+      "Workflow Automation",
+      "Data-Driven Optimization",
+      "Experimentation Platforms",
+      "User-Facing Products",
+      "Search Systems",
+      "Discovery Systems",
+      "Recommendation Systems",
+      "Content Optimization",
+      "AI Agents",
+      "Agentic Workflows"
     ],
-    "seniority": "entry-level to early-career (0-3 years)"
+    "seniority": "senior, 3+ years"
   },
-  "boolean_query": "(data engineering OR software engineering OR computer science OR data science OR business analytics OR data architecture) AND (SQL OR Python OR \"data warehousing\" OR \"data solutions\" OR \"business problem solving\" OR \"data system design\" OR \"LLM applications\" OR \"real-time data processing\" OR \"streaming data processing\" OR \"real-time analytics\" OR \"data warehouse design\" OR \"data warehouse architecture\" OR \"LLM integration\" OR \"batch data warehouses\" OR \"traditional data warehouses\" OR \"data platform engineering\" OR \"data infrastructure engineering\") AND (\"entry-level\" OR \"early-career\" OR \"0-3 years\" OR \"new grad\" OR \"recent grad\" OR \"junior\") AND (\"large scale tech company\" OR \"FAANG\" OR \"tech giant\" OR \"unicorn startup\" OR \"high-growth tech\" OR \"scalable tech company\")",
+  "boolean_query": "(Backend Engineer OR Distributed Systems Engineer OR Go Developer OR Python Developer OR Java Developer OR C++ Developer OR System Design OR Scalable Systems OR Reliability Engineering OR Performance Optimization OR AIGC OR LLM Applications OR AI Coding Tools OR Workflow Automation OR Data-Driven Optimization OR Experimentation Platforms OR User-Facing Products OR Search Systems OR Discovery Systems OR Recommendation Systems OR Content Optimization OR AI Agents OR Agentic Workflows) AND (Backend Engineering OR Distributed Systems OR Software Engineering OR Data Engineering OR Machine Learning Engineering OR Product Engineering OR Platform Engineering OR Infrastructure Engineering OR Site Reliability Engineering OR DevOps Engineering OR Full-Stack Engineering OR Performance Engineering OR Scalability Engineering) AND (\"high-growth tech companies\" OR \"AI-driven product companies\" OR \"content optimization platforms\" OR \"search and discovery systems\" OR \"recommendation engine companies\" OR \"scalable systems startups\" OR \"LLM application firms\") AND (senior OR \"3+ years\")",
   "outreach_message": {
-    "outreach_message": "Hi Shuzhu, your Python, SQL, and real-time systems experience aligns with our need to build high quality real-time data warehouses. Would you be open to learning more?",
-    "specific_detail": "build high quality real-time data warehouses",
-    "character_count": 167,
+    "outreach_message": "Hi Marcus, your Go and distributed systems work at FlowScale caught my eye. We’re building growth and content optimization systems for TikTok’s backend. Open to a quick chat?",
+    "specific_detail": "growth and content optimization systems",
+    "character_count": 174,
     "attempts": 1
   },
   "candidate_summary": {
-    "name": "Shuzhu Chen",
-    "current_company": "Kismet XYZ Inc.",
+    "name": "Marcus Reed",
+    "current_company": "FlowScale",
     "key_skills": [
-      "Python",
-      "SQL",
-      "data engineering",
-      "real-time data processing",
-      "LLM applications"
+      "Backend Engineering",
+      "Distributed Systems",
+      "System Design",
+      "Go",
+      "Python"
     ],
-    "fit_reason": "Strong alignment with core JD requirements: extensive Python and SQL experience demonstrated through real-time data pipeline development (Kafka, AWS Lambda) and AI/ML applications (LangChain, RAG). Recent role as AI/ML Full-Stack Engineer at Kismet XYZ Inc. shows hands-on experience with high-volume data processing and event-driven architectures, directly relevant to building real-time data warehouses. LLM applications expertise (Agentic AI, RAG) aligns with the JD's emphasis on LLM integration for data solutions. Recruiter guidance: Potential Match.",
-    "concerns": "Data warehousing experience should be confirmed in recruiter screen - while current role involves real-time data processing, explicit mention of data warehouse design/architecture is not evident. Business problem-solving impact (translating needs into technical solutions) should be verified, as current responsibilities focus more on technical implementation than cross-functional collaboration. Availability for 12-week internship (May-June 2026) should be confirmed."
+    "fit_reason": "Marcus has 8 years of experience in backend engineering and distributed systems, with direct experience in Go and Python—key languages for the role. His work at FlowScale involves leading the design of distributed platform services for workflow automation and analytics, aligning with the JD’s focus on scalable systems and automation. His leadership in mentoring engineers and system design further supports his fit for senior backend responsibilities. Recruiter guidance: Consider.",
+    "concerns": "While Marcus has strong backend and distributed systems experience, his profile does not explicitly confirm expertise in C++, scalable systems performance optimization, or AIGC/LLM applications. These should be validated during the recruiter screen. Additionally, his experience with user-facing products or growth systems is not evident from the provided profile."
   },
   "pipeline_trace": [
     {
@@ -67,7 +84,7 @@
       "action": "generate_search_strategy",
       "attempt": 1,
       "result": "pass",
-      "note": "Seniority decision: entry-level to early-career (0-3 years)"
+      "note": "Seniority decision: senior, 3+ years"
     },
     {
       "step": 3,
@@ -81,14 +98,14 @@
       "action": "generate_outreach_message",
       "attempt": 1,
       "result": "pass",
-      "note": "Outreach passed local validation for Shuzhu Chen (local match score 66). Selected outreach variant: executive_brief. Outreach variants: {\"variants\": {\"warm_direct\": \"Hi Shuzhu, your Kafka and real-time data pipeline work at Kismet XYZ stands out. We’re building high quality real-time data warehouses for TikTok LIVE. Open to a quick chat?\",\"startup_casual\": \"Hi Shuzhu, your React dashboards and AWS serverless work caught my eye. We’re hiring for a role to build high quality real-time data warehouses at TikTok. Worth a quick conversation?\",\"executive_brief\": \"Hi Shuzhu, your Python, SQL, and real-time systems experience aligns with our need to build high quality real-time data warehouses. Would you be open to learning more?\"},\"selected\": \"executive_brief\"} Bias detection: {\"has_warning\": false,\"warnings\": [],\"recommended_action\": \"No recruiting bias warning detected; continue with normal reviewer judgment.\"}"
+      "note": "Outreach passed local validation for Marcus Reed (local match score 57). Selected outreach variant: warm_direct. Outreach variants: {\"variants\": {\"warm_direct\": \"Hi Marcus, your Go and distributed systems work at FlowScale caught my eye. We’re building growth and content optimization systems for TikTok’s backend. Open to a quick chat?\",\"startup_casual\": \"Hi Marcus, your FlowScale backend work with Go and distributed systems stands out. We’re hiring for growth and content optimization systems at TikTok. Worth a quick conversation?\",\"executive_brief\": \"Hi Marcus, your 8 years in distributed systems and backend leadership align with our growth and content optimization systems at TikTok. Would you be open to learning more?\"},\"selected\": \"warm_direct\"} Bias detection: {\"has_warning\": false,\"warnings\": [],\"recommended_action\": \"No recruiting bias warning detected; continue with normal reviewer judgment.\"}"
     },
     {
       "step": 5,
       "action": "generate_candidate_summary",
       "attempt": 1,
       "result": "pass",
-      "note": "Generated summary for locally selected candidate Shuzhu Chen. Applied match interpretation to candidate_summary.fit_reason."
+      "note": "Generated summary for locally selected candidate Marcus Reed. Applied match interpretation to candidate_summary.fit_reason."
     }
   ]
 }
