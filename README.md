@@ -290,6 +290,8 @@ CTA. Failed attempts are logged and re-prompted with the exact failure reason.
 
 ## Sample Run
 
+Paste the sample description:
+
 ```text
 Company name: Tiktok
 Senior Backend Software Engineer - Innovative Growth
