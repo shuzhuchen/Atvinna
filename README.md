@@ -212,7 +212,7 @@ The fifth LLM call summarizes the locally selected candidate using:
 
 The summary is validated so it matches the locally selected candidate.
 
-## Step 5.2 Candidate Matching And Interpretation
+### Step 5.2 Candidate Matching And Interpretation
 
 Candidate scoring is designed to be explainable and domain-neutral. It does not
 use a hardcoded software, finance, or industry-specific vocabulary. Match
