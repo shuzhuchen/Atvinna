@@ -607,7 +607,7 @@ export function ResultsTabs({ result }: { result: PipelineOutput }) {
 
 export function EmptyResults() {
   return (
-    <section className="flex min-h-96 items-center justify-center bg-white p-6">
+    <section className="flex min-h-full items-center justify-center bg-white p-6">
       <div className="max-w-sm text-center">
         <ClipboardList className="mx-auto h-6 w-6 text-slate-400" />
         <p className="mt-3 text-sm font-medium text-slate-700">No pipeline results yet</p>
@@ -634,7 +634,7 @@ export function LoadingResults() {
   const progressPercent = Math.min(96, ((stageIndex + 1) / loadingStages.length) * 100);
 
   return (
-    <section className="flex min-h-96 items-center justify-center bg-white p-6">
+    <section className="flex min-h-full items-center justify-center bg-white p-6">
       <div className="w-full max-w-md text-center">
         <div className="mx-auto h-2 w-full overflow-hidden rounded-full bg-slate-100">
           <div

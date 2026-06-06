@@ -1,75 +1,72 @@
 {
   "candidate_search_strategy": {
     "target_backgrounds": [
-      "Backend Engineering",
-      "Distributed Systems",
-      "Software Engineering",
-      "Data Engineering",
-      "Machine Learning Engineering",
-      "Product Engineering",
-      "Platform Engineering",
-      "Infrastructure Engineering",
-      "Site Reliability Engineering",
-      "DevOps Engineering",
-      "Full-Stack Engineering",
-      "Performance Engineering",
-      "Scalability Engineering"
+      "backend engineering",
+      "distributed systems engineering",
+      "system design engineering",
+      "software engineering",
+      "reliability engineering",
+      "performance optimization engineering",
+      "experimentation engineering",
+      "scalability engineering",
+      "platform engineering",
+      "AI/ML engineering"
     ],
     "target_companies": [
       "high-growth tech companies",
-      "AI-driven product companies",
-      "content optimization platforms",
-      "search and discovery systems",
-      "recommendation engine companies",
-      "scalable systems startups",
-      "LLM application firms"
+      "AI-first startups",
+      "content platforms",
+      "recommendation systems companies",
+      "search and discovery platforms",
+      "experimentation and optimization platforms",
+      "workflow automation companies",
+      "agentic AI companies"
     ],
     "keywords": [
-      "Backend Engineer",
-      "Distributed Systems Engineer",
-      "Go Developer",
-      "Python Developer",
-      "Java Developer",
-      "C++ Developer",
-      "System Design",
-      "Scalable Systems",
-      "Reliability Engineering",
-      "Performance Optimization",
+      "backend engineer",
+      "distributed systems",
+      "system design",
+      "Go",
+      "Python",
+      "Java",
+      "C++",
+      "scalable systems",
+      "reliability engineering",
+      "performance optimization",
       "AIGC",
-      "LLM Applications",
-      "AI Coding Tools",
-      "Workflow Automation",
-      "Data-Driven Optimization",
-      "Experimentation Platforms",
-      "User-Facing Products",
-      "Search Systems",
-      "Discovery Systems",
-      "Recommendation Systems",
-      "Content Optimization",
-      "AI Agents",
-      "Agentic Workflows"
+      "LLM applications",
+      "agent frameworks",
+      "AI coding tools",
+      "workflow automation",
+      "data-driven optimization",
+      "experimentation platforms",
+      "search systems",
+      "discovery systems",
+      "recommendation systems",
+      "content optimization",
+      "experimentation systems"
     ],
     "seniority": "senior, 3+ years"
   },
-  "boolean_query": "(Backend Engineer OR Distributed Systems Engineer OR Go Developer OR Python Developer OR Java Developer OR C++ Developer OR System Design OR Scalable Systems OR Reliability Engineering OR Performance Optimization OR AIGC OR LLM Applications OR AI Coding Tools OR Workflow Automation OR Data-Driven Optimization OR Experimentation Platforms OR User-Facing Products OR Search Systems OR Discovery Systems OR Recommendation Systems OR Content Optimization OR AI Agents OR Agentic Workflows) AND (Backend Engineering OR Distributed Systems OR Software Engineering OR Data Engineering OR Machine Learning Engineering OR Product Engineering OR Platform Engineering OR Infrastructure Engineering OR Site Reliability Engineering OR DevOps Engineering OR Full-Stack Engineering OR Performance Engineering OR Scalability Engineering) AND (\"high-growth tech companies\" OR \"AI-driven product companies\" OR \"content optimization platforms\" OR \"search and discovery systems\" OR \"recommendation engine companies\" OR \"scalable systems startups\" OR \"LLM application firms\") AND (senior OR \"3+ years\")",
+  "boolean_query": "(backend engineer OR distributed systems engineer OR system design engineer OR software engineer OR reliability engineer OR performance optimization engineer OR experimentation engineer OR scalability engineer OR platform engineer OR AI/ML engineer) AND (Go OR Python OR Java OR C++) AND (scalable systems OR reliability engineering OR performance optimization OR AIGC OR LLM applications OR agent frameworks OR AI coding tools OR workflow automation OR data-driven optimization OR experimentation platforms OR search systems OR discovery systems OR recommendation systems OR content optimization OR experimentation systems) AND (senior OR \"3+ years\")",
   "outreach_message": {
-    "outreach_message": "Hi Marcus, your Go and distributed systems work at FlowScale caught my eye. We’re building growth and content optimization systems for TikTok’s backend. Open to a quick chat?",
+    "outreach_message": "Hi Marcus, your 8 years in distributed systems and Go at FlowScale caught my eye. We’re building growth and content optimization systems for TikTok’s backend. Open to a quick chat?",
     "specific_detail": "growth and content optimization systems",
-    "character_count": 174,
+    "character_count": 180,
     "attempts": 1
   },
   "candidate_summary": {
     "name": "Marcus Reed",
     "current_company": "FlowScale",
     "key_skills": [
-      "Backend Engineering",
-      "Distributed Systems",
-      "System Design",
       "Go",
-      "Python"
+      "Python",
+      "distributed systems",
+      "system design",
+      "backend engineering"
     ],
-    "fit_reason": "Marcus has 8 years of experience in backend engineering and distributed systems, with direct experience in Go and Python—key languages for the role. His work at FlowScale involves leading the design of distributed platform services for workflow automation and analytics, aligning with the JD’s focus on scalable systems and automation. His leadership in mentoring engineers and system design further supports his fit for senior backend responsibilities. Recruiter guidance: Consider.",
-    "concerns": "While Marcus has strong backend and distributed systems experience, his profile does not explicitly confirm expertise in C++, scalable systems performance optimization, or AIGC/LLM applications. These should be validated during the recruiter screen. Additionally, his experience with user-facing products or growth systems is not evident from the provided profile."
+    "fit_reason": "Marcus has 8 years of experience in backend engineering and distributed systems, with direct experience in Go and Python at FlowScale, where he led the design of distributed platform services for workflow automation. His background in Node.js, TypeScript, and event-driven architectures aligns with the JD's emphasis on scalable backend systems and experimentation workflows. His mentorship and technical leadership roles demonstrate ownership and collaboration skills critical for cross-functional projects. Recruiter guidance: Consider.",
+    "concerns": "C++ proficiency should be confirmed in recruiter screen, as it is a listed requirement. Scalable systems and performance optimization experience should also be verified, as while Marcus has relevant distributed systems experience, the JD emphasizes large-scale consumer-facing platforms which may require deeper validation."
   },
   "pipeline_trace": [
     {
@@ -98,7 +95,7 @@
       "action": "generate_outreach_message",
       "attempt": 1,
       "result": "pass",
-      "note": "Outreach passed local validation for Marcus Reed (local match score 57). Selected outreach variant: warm_direct. Outreach variants: {\"variants\": {\"warm_direct\": \"Hi Marcus, your Go and distributed systems work at FlowScale caught my eye. We’re building growth and content optimization systems for TikTok’s backend. Open to a quick chat?\",\"startup_casual\": \"Hi Marcus, your FlowScale backend work with Go and distributed systems stands out. We’re hiring for growth and content optimization systems at TikTok. Worth a quick conversation?\",\"executive_brief\": \"Hi Marcus, your 8 years in distributed systems and backend leadership align with our growth and content optimization systems at TikTok. Would you be open to learning more?\"},\"selected\": \"warm_direct\"} Bias detection: {\"has_warning\": false,\"warnings\": [],\"recommended_action\": \"No recruiting bias warning detected; continue with normal reviewer judgment.\"}"
+      "note": "Outreach passed local validation for Marcus Reed (local match score 59). Selected outreach variant: warm_direct. Outreach variants: {\"variants\": {\"warm_direct\": \"Hi Marcus, your 8 years in distributed systems and Go at FlowScale caught my eye. We’re building growth and content optimization systems for TikTok’s backend. Open to a quick chat?\",\"startup_casual\": \"Hi Marcus, your FlowScale work on distributed systems and Go stood out. We’re hiring for growth and content optimization systems at TikTok’s backend. Worth a quick conversation?\",\"executive_brief\": \"Hi Marcus, your distributed systems and Go background aligns with our growth and content optimization systems at TikTok. Would you be open to learning more?\"},\"selected\": \"warm_direct\"} Bias detection: {\"has_warning\": false,\"warnings\": [],\"recommended_action\": \"No recruiting bias warning detected; continue with normal reviewer judgment.\"}"
     },
     {
       "step": 5,

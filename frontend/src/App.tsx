@@ -47,7 +47,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4 lg:px-8">
           <div className="flex items-center gap-3">
@@ -63,8 +63,8 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1500px] p-4 sm:p-5 lg:p-8">
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:grid lg:grid-cols-[420px_minmax(0,1fr)]">
+      <main className="mx-auto flex w-full max-w-[1500px] flex-1 p-4 sm:p-5 lg:p-8">
+        <div className="grid min-h-[calc(100vh-7rem)] w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:grid-cols-[420px_minmax(0,1fr)]">
           <DashboardForm
             jobDescription={jobDescription}
             notes={notes}

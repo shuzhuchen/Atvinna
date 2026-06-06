@@ -20,7 +20,7 @@ export function DashboardForm({
   onSubmit,
 }: DashboardFormProps) {
   return (
-    <aside className="border-b border-slate-200 bg-white p-5 lg:border-b-0 lg:border-r lg:p-6">
+    <aside className="h-full border-b border-slate-200 bg-white p-5 lg:border-b-0 lg:border-r lg:p-6">
       <div className="mb-6">
         <h2 className="text-base font-semibold text-slate-900">Role context</h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">
